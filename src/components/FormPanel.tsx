@@ -1,25 +1,30 @@
+'use client';
 import React, { ChangeEvent } from 'react';
-import { PlayerCardState } from '../types';
+import { PlayerCardState, TournamentInfo } from '../types';
 
 interface FormPanelProps {
   state: PlayerCardState;
   setState: React.Dispatch<React.SetStateAction<PlayerCardState>>;
+  tournament: TournamentInfo;
   onGenerate: () => void;
+  onEditTournament: () => void;
+  onNewPlayer: () => void;
+  showCard: boolean;
 }
 
-export default function FormPanel({ state, setState, onGenerate }: FormPanelProps) {
+export default function FormPanel({ state, setState, tournament, onGenerate, onEditTournament, onNewPlayer, showCard }: FormPanelProps) {
   const handleInput = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setState(prev => ({ ...prev, [name]: value }));
   };
 
-  const loadPhoto = (e: ChangeEvent<HTMLInputElement>, field: 'playerPhotoSrc' | 'clubLogoSrc') => {
+  const loadPhoto = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setState(prev => ({ ...prev, [field]: dataUrl }));
+      setState(prev => ({ ...prev, playerPhotoSrc: dataUrl }));
     };
     reader.readAsDataURL(file);
   };
@@ -35,28 +40,23 @@ export default function FormPanel({ state, setState, onGenerate }: FormPanelProp
 
   return (
     <div className="form-panel">
-      <div className="section-label">Tournament Info</div>
-      <div className="form-group">
-        <label>Tournament Name</label>
-        <input type="text" name="tournamentName" value={state.tournamentName} placeholder="e.g. Premier League 2025" onChange={handleInput} />
-      </div>
-      <div className="form-group">
-        <label>Season / Year</label>
-        <input type="text" name="tournamentYear" value={state.tournamentYear} placeholder="e.g. 2025" onChange={handleInput} />
-      </div>
-      <div className="form-group">
-        <label>Club / Team Logo</label>
-        <div className="logo-upload-row">
-          <label className="logo-preview" htmlFor="logoInput">
-            {state.clubLogoSrc ? (
-              <img src={state.clubLogoSrc} alt="logo" />
-            ) : (
-              <span className="logo-preview-text">🏆</span>
-            )}
-          </label>
-          <input type="file" id="logoInput" accept="image/*" onChange={(e) => loadPhoto(e, 'clubLogoSrc')} />
-          <input type="text" name="clubName" value={state.clubName} placeholder="Club / Team name" onChange={handleInput} style={{ flex: 1 }} />
+      {/* Locked Tournament Banner */}
+      <div className="tournament-banner">
+        <div className="tournament-banner-info">
+          {tournament.clubLogoSrc && (
+            <div className="tournament-banner-logo">
+              <img src={tournament.clubLogoSrc} alt="logo" />
+            </div>
+          )}
+          <div>
+            <div className="tournament-banner-name">{tournament.tournamentName}</div>
+            <div className="tournament-banner-meta">
+              {tournament.tournamentYear && <span>{tournament.tournamentYear}</span>}
+              {tournament.clubName && <span> • {tournament.clubName}</span>}
+            </div>
+          </div>
         </div>
+        <button className="tournament-edit-btn" onClick={onEditTournament}>✏️</button>
       </div>
 
       <div className="section-label">Player Details</div>
@@ -70,7 +70,7 @@ export default function FormPanel({ state, setState, onGenerate }: FormPanelProp
               <div className="photo-preview-text">📷<br />Upload<br />Photo</div>
             )}
           </label>
-          <input type="file" id="photoInput" accept="image/*" onChange={(e) => loadPhoto(e, 'playerPhotoSrc')} />
+          <input type="file" id="photoInput" accept="image/*" onChange={loadPhoto} />
           <div className="photo-upload-right">
             <div className="form-group">
               <label>Full Name</label>
@@ -137,7 +137,12 @@ export default function FormPanel({ state, setState, onGenerate }: FormPanelProp
         ))}
       </div>
 
-      <button className="gen-btn" onClick={onGenerate}>⚡ Generate Player Card</button>
+      <div className="form-actions">
+        <button className="gen-btn" onClick={onGenerate}>⚡ Generate Player Card</button>
+        {showCard && (
+          <button className="new-player-btn" onClick={onNewPlayer}>➕ NEW PLAYER</button>
+        )}
+      </div>
     </div>
   );
 }

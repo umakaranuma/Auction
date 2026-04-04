@@ -494,7 +494,178 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
 /* hidden file inputs */
 input[type="file"] { display: none; }
 
+/* ── Tournament Setup Screen ── */
+.setup-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+  padding: 2rem;
+  background: radial-gradient(ellipse at 50% 20%, rgba(201,168,76,0.06) 0%, transparent 70%),
+              #0a0f18;
+}
+.setup-card {
+  background: linear-gradient(160deg, #0d1f2d 0%, #0d1a28 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.08);
+}
+.setup-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+.setup-title {
+  font-family: var(--font-bebas-neue), cursive;
+  font-size: 1.8rem;
+  letter-spacing: 5px;
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+}
+.setup-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+.setup-form {
+  text-align: left;
+}
+.setup-logo-area {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.setup-logo-preview {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed rgba(201,168,76,0.4);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.3s;
+}
+.setup-logo-preview:hover { border-color: var(--gold); }
+.setup-logo-preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.setup-logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.setup-logo-placeholder span:first-child { font-size: 1.8rem; }
+.setup-logo-text {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Tournament Banner (locked) ── */
+.tournament-banner {
+  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(201,168,76,0.03) 100%);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tournament-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.tournament-banner-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1.5px solid var(--gold);
+}
+.tournament-banner-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tournament-banner-name {
+  font-family: var(--font-bebas-neue), cursive;
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tournament-banner-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+.tournament-edit-btn {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.tournament-edit-btn:hover {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.08);
+}
+
+/* ── Form Actions ── */
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.new-player-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1.5px solid var(--gold);
+  border-radius: 8px;
+  color: var(--gold);
+  font-family: var(--font-bebas-neue), cursive;
+  font-size: 1.1rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.new-player-btn:hover {
+  background: rgba(201,168,76,0.08);
+  transform: translateY(-1px);
+}
+.new-player-btn:active { transform: translateY(0); }
+
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
   .preview-panel { padding: 1.5rem 1rem; }
+  .setup-card { margin: 1rem; }
 }

@@ -1,8 +1,11 @@
-export interface PlayerCardState {
+export interface TournamentInfo {
   tournamentName: string;
   tournamentYear: string;
   clubLogoSrc: string | null;
   clubName: string;
+}
+
+export interface PlayerCardState extends TournamentInfo {
   playerPhotoSrc: string | null;
   playerName: string;
   jerseyNumber: string;
