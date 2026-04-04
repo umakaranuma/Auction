@@ -4,34 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cricket Player Card Generator</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --pitch: #1a472a;
+    --navy: #0a1628;
+    --navy-mid: #0f2040;
+    --cyan: #00d4ff;
+    --cyan-glow: rgba(0,212,255,0.3);
     --gold: #c9a84c;
     --gold-light: #f0d080;
-    --cream: #fdf6e3;
-    --dark: #0f1923;
-    --card-bg: #0d2137;
+    --dark: #060d1a;
     --accent: #e63946;
-    --text-main: #f0ece0;
-    --text-muted: #8fa3b1;
-    --border: rgba(201,168,76,0.3);
+    --text-main: #f0f0f0;
+    --text-muted: #7a8fa0;
+    --border: rgba(0,212,255,0.2);
   }
 
   body {
     font-family: 'Rajdhani', sans-serif;
-    background: #0a0f18;
+    background: #060d1a;
     color: var(--text-main);
     min-height: 100vh;
   }
 
   /* ── Header ── */
   header {
-    background: linear-gradient(135deg, #0d1f2d 0%, #0f2a1e 100%);
-    border-bottom: 2px solid var(--gold);
+    background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 100%);
+    border-bottom: 2px solid var(--cyan);
     padding: 1rem 2rem;
     display: flex;
     align-items: center;
@@ -39,16 +40,18 @@
   }
   .header-icon {
     width: 48px; height: 48px;
-    background: var(--gold);
+    background: linear-gradient(135deg, var(--cyan), #0088cc);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px;
+    box-shadow: 0 0 20px var(--cyan-glow);
   }
   header h1 {
     font-family: 'Bebas Neue', cursive;
     font-size: 2rem;
     letter-spacing: 3px;
-    color: var(--gold);
+    color: var(--cyan);
+    text-shadow: 0 0 15px var(--cyan-glow);
   }
   header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
 
@@ -62,7 +65,7 @@
 
   /* ── Form Panel ── */
   .form-panel {
-    background: #0d1a28;
+    background: #0a1222;
     border-right: 1px solid var(--border);
     padding: 1.5rem;
     overflow-y: auto;
@@ -71,7 +74,7 @@
     font-family: 'Bebas Neue', cursive;
     font-size: 1rem;
     letter-spacing: 3px;
-    color: var(--gold);
+    color: var(--cyan);
     border-bottom: 1px solid var(--border);
     padding-bottom: 6px;
     margin: 1.2rem 0 0.8rem;
@@ -94,7 +97,7 @@
   .form-group select {
     width: 100%;
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(201,168,76,0.25);
+    border: 1px solid rgba(0,212,255,0.2);
     border-radius: 6px;
     padding: 8px 12px;
     color: var(--text-main);
@@ -105,9 +108,10 @@
   }
   .form-group input:focus,
   .form-group select:focus {
-    border-color: var(--gold);
+    border-color: var(--cyan);
+    box-shadow: 0 0 8px rgba(0,212,255,0.15);
   }
-  .form-group select option { background: #0d1a28; }
+  .form-group select option { background: #0a1222; }
 
   /* Photo upload */
   .photo-upload {
@@ -117,7 +121,7 @@
   }
   .photo-preview {
     width: 90px; height: 110px;
-    border: 2px dashed rgba(201,168,76,0.4);
+    border: 2px dashed rgba(0,212,255,0.3);
     border-radius: 8px;
     background: rgba(255,255,255,0.03);
     display: flex;
@@ -131,7 +135,7 @@
     position: relative;
     transition: border-color 0.2s;
   }
-  .photo-preview:hover { border-color: var(--gold); }
+  .photo-preview:hover { border-color: var(--cyan); }
   .photo-preview img {
     position: absolute;
     inset: 0;
@@ -150,7 +154,7 @@
   }
   .logo-preview {
     width: 56px; height: 56px;
-    border: 2px dashed rgba(201,168,76,0.4);
+    border: 2px dashed rgba(0,212,255,0.3);
     border-radius: 50%;
     background: rgba(255,255,255,0.03);
     display: flex;
@@ -162,7 +166,7 @@
     flex-shrink: 0;
     transition: border-color 0.2s;
   }
-  .logo-preview:hover { border-color: var(--gold); }
+  .logo-preview:hover { border-color: var(--cyan); }
   .logo-preview img {
     position: absolute;
     inset: 0;
@@ -182,35 +186,35 @@
     align-items: center;
     gap: 8px;
     background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(201,168,76,0.15);
+    border: 1px solid rgba(0,212,255,0.12);
     border-radius: 6px;
     padding: 7px 10px;
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;
   }
-  .role-check:hover { border-color: rgba(201,168,76,0.4); }
+  .role-check:hover { border-color: rgba(0,212,255,0.35); }
   .role-check input { display: none; }
   .role-check.checked {
-    background: rgba(201,168,76,0.12);
-    border-color: var(--gold);
+    background: rgba(0,212,255,0.1);
+    border-color: var(--cyan);
   }
   .role-check .dot {
     width: 14px; height: 14px;
-    border: 1.5px solid rgba(201,168,76,0.5);
+    border: 1.5px solid rgba(0,212,255,0.4);
     border-radius: 3px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     transition: all 0.2s;
   }
   .role-check.checked .dot {
-    background: var(--gold);
-    border-color: var(--gold);
+    background: var(--cyan);
+    border-color: var(--cyan);
   }
   .role-check .dot::after {
     content: '';
     width: 6px; height: 6px;
-    background: #0d1a28;
+    background: #0a1222;
     clip-path: polygon(20% 50%, 40% 70%, 80% 20%, 90% 30%, 40% 85%, 10% 60%);
     display: none;
   }
@@ -226,7 +230,7 @@
     flex: 1;
     padding: 7px;
     text-align: center;
-    border: 1px solid rgba(201,168,76,0.2);
+    border: 1px solid rgba(0,212,255,0.15);
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.82rem;
@@ -235,37 +239,35 @@
     transition: all 0.2s;
     user-select: none;
   }
-  .hand-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--text-main); }
+  .hand-btn:hover { border-color: rgba(0,212,255,0.35); color: var(--text-main); }
   .hand-btn.active {
-    background: rgba(201,168,76,0.15);
-    border-color: var(--gold);
-    color: var(--gold);
+    background: rgba(0,212,255,0.12);
+    border-color: var(--cyan);
+    color: var(--cyan);
     font-weight: 600;
   }
-
-  .jersey-row { display: flex; gap: 8px; }
-  .jersey-row input[type="number"] { width: 80px; }
 
   .gen-btn {
     width: 100%;
     margin-top: 1.2rem;
     padding: 13px;
-    background: linear-gradient(135deg, var(--gold), #a07830);
+    background: linear-gradient(135deg, var(--cyan), #0088cc);
     border: none;
     border-radius: 8px;
-    color: #0d1a28;
+    color: #fff;
     font-family: 'Bebas Neue', cursive;
     font-size: 1.2rem;
     letter-spacing: 3px;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 20px rgba(0,212,255,0.3);
   }
   .gen-btn:hover { opacity: 0.9; transform: translateY(-1px); }
   .gen-btn:active { transform: translateY(0); }
 
   /* ── Preview Panel ── */
   .preview-panel {
-    background: #070e18;
+    background: #050a14;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -280,207 +282,239 @@
     color: var(--text-muted);
   }
 
-  /* ── Player Card ── */
+  /* ═══════════════════════════════════════════
+     ██  T20 WORLD CUP STYLE PLAYER CARD  ██
+     ═══════════════════════════════════════════ */
   .player-card {
-    width: 340px;
-    background: linear-gradient(160deg, #0d2137 0%, #071525 60%, #0d1a10 100%);
-    border: 1px solid rgba(201,168,76,0.4);
-    border-radius: 16px;
+    width: 380px;
+    height: 560px;
+    background: var(--navy);
+    border-radius: 18px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 0 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.1);
+    box-shadow:
+      0 0 80px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(0,212,255,0.15),
+      0 20px 60px rgba(0,0,0,0.5);
   }
 
-  /* Top diagonal accent */
-  .card-top-bar {
-    height: 6px;
-    background: linear-gradient(90deg, var(--gold), #e63946, var(--gold));
-  }
-
-  .card-header {
-    padding: 1rem 1rem 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  .tournament-info { flex: 1; }
-  .tournament-name {
-    font-family: 'Bebas Neue', cursive;
-    font-size: 0.85rem;
-    letter-spacing: 3px;
-    color: var(--gold);
-    line-height: 1.2;
-  }
-  .tournament-year {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    letter-spacing: 2px;
-  }
-  .club-logo-circle {
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    border: 2px solid var(--gold);
-    background: rgba(201,168,76,0.1);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-    font-size: 0.65rem;
-    color: var(--gold);
-    text-align: center;
-    font-weight: 700;
-    letter-spacing: 0;
-  }
-  .club-logo-circle img { width: 100%; height: 100%; object-fit: cover; }
-
-  /* Player image area */
-  .card-player-area {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    margin: 0.5rem 0 0;
-  }
-  .player-img-frame {
-    width: 140px; height: 160px;
-    position: relative;
-  }
-  .player-img-frame::before {
-    content: '';
+  /* ── Canvas for explosive burst background ── */
+  .card-bg-canvas {
     position: absolute;
-    inset: -3px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--gold), transparent, rgba(230,57,70,0.5));
+    inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: 0;
+    pointer-events: none;
   }
-  .player-img-frame img,
-  .player-img-placeholder {
-    position: relative;
-    z-index: 1;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-    display: block;
+
+  /* ── Tournament logo area (top-left) ── */
+  .card-tournament-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .player-img-placeholder {
-    background: linear-gradient(135deg, #1a3a55, #0d2035);
+  .card-tournament-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3.5rem;
+    background: rgba(0,212,255,0.1);
+    border: 2px solid rgba(0,212,255,0.3);
+    flex-shrink: 0;
+  }
+  .card-tournament-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .card-tournament-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .card-tournament-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.9);
+    text-transform: uppercase;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .card-tournament-year {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    color: rgba(0,212,255,0.7);
+    text-transform: uppercase;
+    font-weight: 500;
   }
 
-  /* Jersey number badge */
-  .jersey-badge {
+  /* ── Hero player image ── */
+  .card-hero-area {
     position: absolute;
-    bottom: -10px;
-    right: 70px;
-    background: var(--accent);
-    color: #fff;
-    font-family: 'Bebas Neue', cursive;
-    font-size: 1.3rem;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid #0d2137;
-    z-index: 2;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 200px;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .card-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  .card-hero-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    background: linear-gradient(180deg, rgba(15,32,64,0.5) 0%, rgba(10,22,40,0.8) 100%);
   }
 
-  /* Name plate */
-  .card-name-plate {
-    text-align: center;
-    padding: 0.8rem 1rem 0.5rem;
-    position: relative;
+  /* Gradient overlay at bottom of image to blend into info area */
+  .card-hero-gradient {
+    position: absolute;
+    bottom: 200px;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, transparent, var(--navy));
+    z-index: 2;
+    pointer-events: none;
   }
-  .player-full-name {
-    font-family: 'Bebas Neue', cursive;
-    font-size: 1.8rem;
+
+  /* ── Info section (bottom half) ── */
+  .card-info-section {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    z-index: 3;
+    background: var(--navy);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px 16px;
+  }
+
+  .card-profile-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+
+  .card-player-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
     letter-spacing: 3px;
     color: #fff;
-    line-height: 1;
-    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 14px;
+    text-shadow: 0 2px 15px rgba(0,212,255,0.2);
   }
-  .player-role-tags {
+
+  /* ── Stats grid (4 boxes) ── */
+  .card-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+  .stat-box {
+    background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(0,100,180,0.08) 100%);
+    border: 1px solid rgba(0,212,255,0.25);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.6;
+  }
+  .stat-box-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 1.5px;
+    color: rgba(0,212,255,0.8);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .stat-box-value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  /* ── Role tags ── */
+  .card-role-tags {
     display: flex;
     justify-content: center;
     gap: 6px;
     flex-wrap: wrap;
-    margin-top: 6px;
+    margin-bottom: 8px;
   }
   .role-tag {
-    background: rgba(201,168,76,0.15);
-    border: 1px solid rgba(201,168,76,0.4);
-    color: var(--gold-light);
-    font-size: 0.62rem;
+    background: rgba(0,212,255,0.12);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--cyan);
+    font-size: 0.58rem;
     letter-spacing: 1.5px;
-    padding: 2px 8px;
+    padding: 2px 10px;
     border-radius: 20px;
     text-transform: uppercase;
     font-weight: 600;
+    font-family: 'Rajdhani', sans-serif;
   }
   .role-tag.red {
-    background: rgba(230,57,70,0.15);
-    border-color: rgba(230,57,70,0.4);
+    background: rgba(230,57,70,0.12);
+    border-color: rgba(230,57,70,0.35);
     color: #ff8a93;
   }
-
-  /* Stats strip */
-  .card-stats {
-    display: flex;
-    border-top: 1px solid rgba(201,168,76,0.2);
-    border-bottom: 1px solid rgba(201,168,76,0.2);
-    margin: 0 0.5rem;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .stat-cell {
-    flex: 1;
-    padding: 8px 4px;
-    text-align: center;
-    border-right: 1px solid rgba(201,168,76,0.15);
-  }
-  .stat-cell:last-child { border-right: none; }
-  .stat-label {
-    font-size: 0.58rem;
-    letter-spacing: 1.5px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-  }
-  .stat-value {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--gold-light);
-    line-height: 1.2;
-  }
-  .stat-value.small { font-size: 0.75rem; }
-
-  /* Footer info */
-  .card-footer {
-    padding: 0.6rem 1rem 0.9rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .footer-detail {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-  }
-  .footer-detail strong { color: var(--text-main); font-weight: 600; }
-
-  /* Decorative corner lines */
-  .corner-tl, .corner-br {
-    position: absolute;
-    width: 24px; height: 24px;
-  }
-  .corner-tl { top: 8px; left: 8px; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); opacity: 0.5; }
-  .corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); opacity: 0.5; }
 
   /* Download */
   .download-btn {
     padding: 10px 28px;
     background: transparent;
-    border: 1.5px solid var(--gold);
+    border: 1.5px solid var(--cyan);
     border-radius: 6px;
-    color: var(--gold);
+    color: var(--cyan);
     font-family: 'Bebas Neue', cursive;
     font-size: 1rem;
     letter-spacing: 3px;
@@ -488,7 +522,8 @@
     transition: all 0.2s;
   }
   .download-btn:hover {
-    background: rgba(201,168,76,0.1);
+    background: rgba(0,212,255,0.1);
+    box-shadow: 0 0 20px rgba(0,212,255,0.2);
   }
 
   .empty-state {
@@ -514,7 +549,7 @@
   <div class="header-icon">🏏</div>
   <div>
     <h1>Player Card Generator</h1>
-    <p>CRICKET TOURNAMENT MANAGEMENT SYSTEM</p>
+    <p>T20 WORLD CUP STYLE CARD MAKER</p>
   </div>
 </header>
 
@@ -525,14 +560,14 @@
     <div class="section-label">Tournament Info</div>
     <div class="form-group">
       <label>Tournament Name</label>
-      <input type="text" id="tournamentName" placeholder="e.g. Premier League 2025" oninput="updateCard()">
+      <input type="text" id="tournamentName" placeholder="e.g. ICC Men's T20 World Cup" oninput="updateCard()">
     </div>
     <div class="form-group">
       <label>Season / Year</label>
-      <input type="text" id="tournamentYear" placeholder="e.g. 2025" oninput="updateCard()">
+      <input type="text" id="tournamentYear" placeholder="e.g. Australia 2022" oninput="updateCard()">
     </div>
     <div class="form-group">
-      <label>Club / Team Logo</label>
+      <label>Tournament / Team Logo</label>
       <div class="logo-upload-row">
         <div class="logo-preview" onclick="document.getElementById('logoInput').click()" id="logoPreview">
           <span class="logo-preview-text">🏆</span>
@@ -553,7 +588,7 @@
         <div class="photo-upload-right">
           <div class="form-group">
             <label>Full Name</label>
-            <input type="text" id="playerName" placeholder="e.g. Virat Kohli" oninput="updateCard()">
+            <input type="text" id="playerName" placeholder="e.g. Yuzvendra Chahal" oninput="updateCard()">
           </div>
           <div class="form-group">
             <label>Jersey Number</label>
@@ -568,43 +603,42 @@
       <input type="number" id="playerAge" placeholder="e.g. 24" min="10" max="60" oninput="updateCard()">
     </div>
     <div class="form-group">
-      <label>Phone Number</label>
-      <input type="tel" id="playerPhone" placeholder="+94 77 123 4567" oninput="updateCard()">
-    </div>
-    <div class="form-group">
       <label>Nationality / Region</label>
-      <input type="text" id="playerNationality" placeholder="e.g. Sri Lanka" oninput="updateCard()">
+      <input type="text" id="playerNationality" placeholder="e.g. India" oninput="updateCard()">
     </div>
 
-    <div class="section-label">Batting</div>
+    <div class="section-label">Stats</div>
     <div class="form-group">
-      <label>Batting Hand</label>
-      <div class="hand-row" id="battingHand">
-        <div class="hand-btn active" onclick="selectHand('battingHand', 'Right Hand')">Right Hand</div>
-        <div class="hand-btn" onclick="selectHand('battingHand', 'Left Hand')">Left Hand</div>
-      </div>
-    </div>
-
-    <div class="section-label">Bowling</div>
-    <div class="form-group">
-      <label>Bowling Hand</label>
-      <div class="hand-row" id="bowlingHand">
-        <div class="hand-btn active" onclick="selectHand('bowlingHand', 'Right Arm')">Right Arm</div>
-        <div class="hand-btn" onclick="selectHand('bowlingHand', 'Left Arm')">Left Arm</div>
-      </div>
+      <label>Stat 1 Label</label>
+      <input type="text" id="stat1Label" placeholder="e.g. Matches" value="Matches" oninput="updateCard()">
     </div>
     <div class="form-group">
-      <label>Bowling Style</label>
-      <select id="bowlingStyle" onchange="updateCard()">
-        <option value="">— Select —</option>
-        <option>Fast</option>
-        <option>Fast-Medium</option>
-        <option>Medium</option>
-        <option>Off Spin</option>
-        <option>Leg Spin</option>
-        <option>Slow Left Arm</option>
-        <option>Chinaman</option>
-      </select>
+      <label>Stat 1 Value</label>
+      <input type="text" id="stat1Value" placeholder="e.g. 69" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Stat 2 Label</label>
+      <input type="text" id="stat2Label" placeholder="e.g. Wickets" value="Wickets" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Stat 2 Value</label>
+      <input type="text" id="stat2Value" placeholder="e.g. 85" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Stat 3 Label</label>
+      <input type="text" id="stat3Label" placeholder="e.g. Best Figures" value="Best Figures" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Stat 3 Value</label>
+      <input type="text" id="stat3Value" placeholder="e.g. 6/25" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Stat 4 Label</label>
+      <input type="text" id="stat4Label" placeholder="e.g. Economy" value="Economy" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Stat 4 Value</label>
+      <input type="text" id="stat4Value" placeholder="e.g. 8.12" oninput="updateCard()">
     </div>
 
     <div class="section-label">Player Role</div>
@@ -641,49 +675,49 @@
     </div>
     <div id="cardContainer" style="display:none; flex-direction:column; align-items:center; gap:1.5rem;">
       <div class="player-card" id="playerCard">
-        <div class="card-top-bar"></div>
-        <div class="corner-tl"></div>
-        <div class="corner-br"></div>
-        <div class="card-header">
-          <div class="tournament-info">
-            <div class="tournament-name" id="card-tournament">TOURNAMENT NAME</div>
-            <div class="tournament-year" id="card-year">2025</div>
+        <!-- Explosive burst background drawn via canvas -->
+        <canvas class="card-bg-canvas" id="cardBgCanvas" width="380" height="560"></canvas>
+
+        <!-- Tournament badge (top-left) -->
+        <div class="card-tournament-badge">
+          <div class="card-tournament-logo" id="card-logo">
+            <span style="font-size:0.55rem;color:var(--cyan);font-weight:700;text-align:center;padding:2px;">LOGO</span>
           </div>
-          <div class="club-logo-circle" id="card-logo">
-            <span>LOGO</span>
-          </div>
-        </div>
-        <div class="card-player-area">
-          <div class="player-img-frame">
-            <div class="player-img-placeholder" id="card-photo">🧑</div>
-          </div>
-          <div class="jersey-badge" id="card-jersey" style="display:none"></div>
-        </div>
-        <div class="card-name-plate">
-          <div class="player-full-name" id="card-name">PLAYER NAME</div>
-          <div class="player-role-tags" id="card-roles"></div>
-        </div>
-        <div class="card-stats" id="card-stats">
-          <div class="stat-cell">
-            <div class="stat-label">Batting</div>
-            <div class="stat-value small" id="stat-batting">RHB</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-label">Bowling</div>
-            <div class="stat-value small" id="stat-bowling">RAM</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-label">Age</div>
-            <div class="stat-value" id="stat-age">—</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-label">Jersey</div>
-            <div class="stat-value" id="stat-jersey">—</div>
+          <div class="card-tournament-text">
+            <div class="card-tournament-name" id="card-tournament">TOURNAMENT</div>
+            <div class="card-tournament-year" id="card-year">2025</div>
           </div>
         </div>
-        <div class="card-footer">
-          <div class="footer-detail"><strong id="card-nationality">Sri Lanka</strong></div>
-          <div class="footer-detail" id="card-club">—</div>
+
+        <!-- Hero player image -->
+        <div class="card-hero-area">
+          <div class="card-hero-placeholder" id="card-hero">🧑</div>
+        </div>
+        <div class="card-hero-gradient"></div>
+
+        <!-- Info section -->
+        <div class="card-info-section">
+          <div class="card-profile-label">PLAYER PROFILE</div>
+          <div class="card-player-name" id="card-name">PLAYER NAME</div>
+          <div class="card-role-tags" id="card-roles"></div>
+          <div class="card-stats-row" id="card-stats-row">
+            <div class="stat-box">
+              <div class="stat-box-label" id="stat-label-1">MATCHES</div>
+              <div class="stat-box-value" id="stat-value-1">—</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-label" id="stat-label-2">WICKETS</div>
+              <div class="stat-box-value" id="stat-value-2">—</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-label" id="stat-label-3">BEST FIGURES</div>
+              <div class="stat-box-value" id="stat-value-3">—</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-label" id="stat-label-4">ECONOMY</div>
+              <div class="stat-box-value" id="stat-value-4">—</div>
+            </div>
+          </div>
         </div>
       </div>
       <button class="download-btn" onclick="downloadCard()">⬇ DOWNLOAD CARD</button>
@@ -696,16 +730,110 @@
   let playerPhotoSrc = null;
   let logoSrc = null;
   let selectedRoles = new Set();
-  let battingHandVal = 'Right Hand';
-  let bowlingHandVal = 'Right Arm';
 
-  function selectHand(groupId, value) {
-    const group = document.getElementById(groupId);
-    group.querySelectorAll('.hand-btn').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    if (groupId === 'battingHand') battingHandVal = value;
-    else bowlingHandVal = value;
-    updateCard();
+  // ── Draw explosive burst / spiky background on the canvas ──
+  function drawCardBackground() {
+    const canvas = document.getElementById('cardBgCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Deep navy gradient base
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, '#0c1e3a');
+    bgGrad.addColorStop(0.5, '#0a1628');
+    bgGrad.addColorStop(1, '#06101e');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw explosive spiky burst shapes
+    function drawBurst(cx, cy, innerR, outerR, spikes, color, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (let i = 0; i < spikes * 2; i++) {
+        const angle = (Math.PI * 2 * i) / (spikes * 2) - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Draw multiple bursts for layered depth
+    // Top-right burst cluster (cyan)
+    drawBurst(W * 0.85, H * 0.15, 30, 120, 18, '#00aadd', 0.15);
+    drawBurst(W * 0.9, H * 0.08, 20, 80, 14, '#00ccff', 0.12);
+    drawBurst(W * 0.78, H * 0.22, 15, 60, 12, '#0099cc', 0.1);
+
+    // Bottom-right burst cluster
+    drawBurst(W * 0.88, H * 0.82, 35, 140, 20, '#00aadd', 0.18);
+    drawBurst(W * 0.95, H * 0.88, 25, 100, 16, '#00ccff', 0.12);
+    drawBurst(W * 0.75, H * 0.9, 20, 70, 14, '#0088bb', 0.1);
+
+    // Left side accent bursts
+    drawBurst(W * 0.08, H * 0.35, 15, 60, 12, '#0077aa', 0.1);
+    drawBurst(W * 0.05, H * 0.65, 20, 75, 14, '#0099cc', 0.08);
+
+    // Center-right larger burst behind player
+    drawBurst(W * 0.6, H * 0.3, 50, 180, 22, '#0d2a50', 0.25);
+    drawBurst(W * 0.55, H * 0.35, 30, 120, 16, '#0f3060', 0.15);
+
+    // Add some sharp triangular spike shapes scattered around
+    function drawSpike(x, y, length, angle, width, color, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(length, -width / 2);
+      ctx.lineTo(length * 0.85, 0);
+      ctx.lineTo(length, width / 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Scattered spikes
+    const spikeData = [
+      [W*0.92, H*0.12, 90, -0.3, 12, '#00bbee', 0.2],
+      [W*0.85, H*0.05, 70, 0.5, 10, '#00aadd', 0.15],
+      [W*0.95, H*0.2, 60, -1.2, 8, '#0099cc', 0.18],
+      [W*0.02, H*0.4, 80, 0.8, 10, '#0077aa', 0.12],
+      [W*0.88, H*0.75, 100, -0.6, 14, '#00bbee', 0.2],
+      [W*0.92, H*0.92, 80, -2.0, 10, '#00aadd', 0.15],
+      [W*0.1, H*0.7, 60, 0.4, 8, '#0088bb', 0.1],
+      [W*0.7, H*0.85, 70, -1.0, 10, '#00ccff', 0.12],
+    ];
+    spikeData.forEach(s => drawSpike(s[0], s[1], s[2], s[3], s[4], s[5], s[6]));
+
+    // Radial glow in center
+    const centerGlow = ctx.createRadialGradient(W*0.5, H*0.35, 10, W*0.5, H*0.35, 200);
+    centerGlow.addColorStop(0, 'rgba(0,180,255,0.08)');
+    centerGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = centerGlow;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle particles / dots
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < 30; i++) {
+      const px = Math.random() * W;
+      const py = Math.random() * H;
+      const pr = Math.random() * 2 + 0.5;
+      ctx.beginPath();
+      ctx.arc(px, py, pr, 0, Math.PI * 2);
+      ctx.fillStyle = `hsl(${190 + Math.random() * 20}, 100%, ${60 + Math.random() * 20}%)`;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function toggleRole(el, role) {
@@ -742,7 +870,7 @@
   }
 
   function updateCard() {
-    // keep card in sync live
+    // Live sync preview
   }
 
   function generateCard() {
@@ -750,46 +878,37 @@
     const tournament = document.getElementById('tournamentName').value.trim();
     const year = document.getElementById('tournamentYear').value.trim();
     const club = document.getElementById('clubName').value.trim();
-    const age = document.getElementById('playerAge').value.trim();
-    const jersey = document.getElementById('jerseyNumber').value.trim();
     const nationality = document.getElementById('playerNationality').value.trim();
-    const bowlingStyle = document.getElementById('bowlingStyle').value;
 
     document.getElementById('emptyState').style.display = 'none';
     const container = document.getElementById('cardContainer');
     container.style.display = 'flex';
 
+    // Draw background
+    drawCardBackground();
+
     // Tournament
     document.getElementById('card-tournament').textContent = tournament || 'TOURNAMENT NAME';
     document.getElementById('card-year').textContent = year || '2025';
 
-    // Club logo
+    // Logo
     const logoEl = document.getElementById('card-logo');
     if (logoSrc) {
       logoEl.innerHTML = `<img src="${logoSrc}" alt="logo">`;
     } else {
-      logoEl.innerHTML = `<span style="font-size:0.6rem;letter-spacing:0;padding:2px;text-align:center">${club || 'LOGO'}</span>`;
+      logoEl.innerHTML = `<span style="font-size:0.55rem;color:var(--cyan);font-weight:700;text-align:center;padding:2px;">${club || 'LOGO'}</span>`;
     }
 
-    // Player photo
-    const photoEl = document.getElementById('card-photo');
+    // Player hero image
+    const heroArea = document.querySelector('.card-hero-area');
     if (playerPhotoSrc) {
-      photoEl.outerHTML = `<img src="${playerPhotoSrc}" id="card-photo" style="position:relative;z-index:1;width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;" alt="player">`;
+      heroArea.innerHTML = `<img src="${playerPhotoSrc}" class="card-hero-img" alt="player">`;
     } else {
-      document.getElementById('card-photo').textContent = '🧑';
+      heroArea.innerHTML = `<div class="card-hero-placeholder">🧑</div>`;
     }
 
     // Name
     document.getElementById('card-name').textContent = name.toUpperCase() || 'PLAYER NAME';
-
-    // Jersey badge
-    const jerseyBadge = document.getElementById('card-jersey');
-    if (jersey) {
-      jerseyBadge.textContent = '#' + jersey;
-      jerseyBadge.style.display = 'flex';
-    } else {
-      jerseyBadge.style.display = 'none';
-    }
 
     // Roles
     const rolesContainer = document.getElementById('card-roles');
@@ -802,21 +921,12 @@
     });
 
     // Stats
-    const battShort = battingHandVal === 'Left Hand' ? 'LHB' : 'RHB';
-    const bowlShort = (() => {
-      const arm = bowlingHandVal === 'Left Arm' ? 'LA' : 'RA';
-      const styleMap = {
-        'Fast': 'F', 'Fast-Medium': 'FM', 'Medium': 'M',
-        'Off Spin': 'OS', 'Leg Spin': 'LS', 'Slow Left Arm': 'SLA', 'Chinaman': 'CHN', '': ''
-      };
-      return arm + (styleMap[bowlingStyle] || '');
-    })();
-    document.getElementById('stat-batting').textContent = battShort;
-    document.getElementById('stat-bowling').textContent = bowlShort || '—';
-    document.getElementById('stat-age').textContent = age || '—';
-    document.getElementById('stat-jersey').textContent = jersey ? '#' + jersey : '—';
-    document.getElementById('card-nationality').textContent = nationality || '—';
-    document.getElementById('card-club').textContent = club || '';
+    for (let i = 1; i <= 4; i++) {
+      const label = document.getElementById(`stat${i}Label`).value.trim();
+      const value = document.getElementById(`stat${i}Value`).value.trim();
+      document.getElementById(`stat-label-${i}`).textContent = label ? label.toUpperCase() : '—';
+      document.getElementById(`stat-value-${i}`).textContent = value || '—';
+    }
   }
 
   function downloadCard() {
