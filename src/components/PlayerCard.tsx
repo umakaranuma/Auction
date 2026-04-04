@@ -29,7 +29,16 @@ export default function PlayerCard({ state }: PlayerCardProps) {
         </div>
         <div className="club-logo-circle">
           {state.clubLogoSrc ? (
-            <img src={state.clubLogoSrc} alt="logo" />
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url(${state.clubLogoSrc})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                borderRadius: '50%',
+              }}
+            />
           ) : (
             <span style={{ fontSize: '0.6rem', letterSpacing: 0, padding: '2px', textAlign: 'center' }}>
               {state.clubName || 'LOGO'}
@@ -41,10 +50,17 @@ export default function PlayerCard({ state }: PlayerCardProps) {
       <div className="card-player-area">
         <div className="player-img-frame">
           {state.playerPhotoSrc ? (
-            <img 
-              src={state.playerPhotoSrc} 
-              alt="player" 
-              style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }} 
+            <div
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url(${state.playerPhotoSrc})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                borderRadius: '8px',
+              }}
             />
           ) : (
             <div className="player-img-placeholder">🧑</div>

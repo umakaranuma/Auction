@@ -16,8 +16,12 @@ export default function FormPanel({ state, setState, onGenerate }: FormPanelProp
   const loadPhoto = (e: ChangeEvent<HTMLInputElement>, field: 'playerPhotoSrc' | 'clubLogoSrc') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setState(prev => ({ ...prev, [field]: url }));
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setState(prev => ({ ...prev, [field]: dataUrl }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleRole = (role: string) => {

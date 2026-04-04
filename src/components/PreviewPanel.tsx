@@ -10,22 +10,39 @@ interface PreviewPanelProps {
 }
 
 export default function PreviewPanel({ state, showCard }: PreviewPanelProps) {
-  const downloadCard = () => {
+  const downloadCard = async () => {
     const card = document.getElementById('player-card');
     if (!card) return;
 
-    html2canvas(card, {
+    // Wait for all images inside the card to be fully loaded before capturing
+    const images = card.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalHeight > 0) {
+              resolve();
+            } else {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            }
+          })
+      )
+    );
+
+    const canvas = await html2canvas(card, {
       backgroundColor: null,
       scale: 3,
       useCORS: true,
-      allowTaint: true
-    }).then(canvas => {
-      const link = document.createElement('a');
-      const name = (state.playerName.trim() || 'player').replace(/\s+/g, '_').toLowerCase();
-      link.download = `player_card_${name}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      allowTaint: true,
+      logging: false,
     });
+
+    const link = document.createElement('a');
+    const name = (state.playerName.trim() || 'player').replace(/\s+/g, '_').toLowerCase();
+    link.download = `player_card_${name}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   };
 
   return (
