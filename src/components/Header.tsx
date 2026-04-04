@@ -6,7 +6,7 @@ export default function Header() {
       <div className="header-icon">🏏</div>
       <div>
         <h1>Player Card Generator</h1>
-        <p>CRICKET TOURNAMENT MANAGEMENT SYSTEM</p>
+        <p>T20 WORLD CUP STYLE CARD MAKER</p>
       </div>
     </header>
   );

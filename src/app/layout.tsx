@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Rajdhani, Bebas_Neue, Barlow_Condensed } from 'next/font/google';
+import { Rajdhani, Bebas_Neue, Barlow_Condensed, Oswald } from 'next/font/google';
 import './globals.css';
 
 const rajdhani = Rajdhani({
@@ -22,6 +22,13 @@ const barlowCondensed = Barlow_Condensed({
   display: 'swap',
 });
 
+const oswald = Oswald({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-oswald',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Cricket Player Card Generator',
   description: 'Cricket Tournament Management System - Player Card Generator',
@@ -33,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${bebasNeue.variable} ${barlowCondensed.variable}`}>
+    <html lang="en" className={`${bebasNeue.variable} ${barlowCondensed.variable} ${oswald.variable}`}>
       <body className={rajdhani.className}>{children}</body>
     </html>
   );
