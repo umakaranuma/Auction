@@ -444,9 +444,21 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
 }
 .stat-value.small { font-size: 0.75rem; }
 
+/* Phone number */
+.card-phone {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  padding: 0.4rem 1rem 0;
+}
+.card-phone span {
+  font-size: 0.65rem;
+}
+
 /* Footer info */
 .card-footer {
-  padding: 0.6rem 1rem 0.9rem;
+  padding: 0.4rem 1rem 0.9rem;
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -6,15 +6,8 @@ interface PlayerCardProps {
 }
 
 export default function PlayerCard({ state }: PlayerCardProps) {
-  const battShort = state.battingHand === 'Left Hand' ? 'LHB' : 'RHB';
-  const bowlShort = (() => {
-    const arm = state.bowlingHand === 'Left Arm' ? 'LA' : 'RA';
-    const styleMap: Record<string, string> = {
-      'Fast': 'F', 'Fast-Medium': 'FM', 'Medium': 'M',
-      'Off Spin': 'OS', 'Leg Spin': 'LS', 'Slow Left Arm': 'SLA', 'Chinaman': 'CHN'
-    };
-    return arm + (styleMap[state.bowlingStyle] || '');
-  })();
+  const battShort = state.battingHand === 'Left Hand' ? 'LH' : 'RH';
+  const bowlShort = state.bowlingHand === 'Left Arm' ? 'LH' : 'RH';
 
   return (
     <div className="player-card" id="player-card">
@@ -99,6 +92,11 @@ export default function PlayerCard({ state }: PlayerCardProps) {
         </div>
       </div>
       
+      {state.playerPhone && (
+        <div className="card-phone">
+          <span>📞</span> {state.playerPhone}
+        </div>
+      )}
       <div className="card-footer">
         <div className="footer-detail"><strong>{state.playerNationality || '—'}</strong></div>
         <div className="footer-detail">{state.clubName || '—'}</div>
