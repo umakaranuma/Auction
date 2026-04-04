@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Player Card Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pitch: #1a472a;
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --cream: #fdf6e3;
+    --dark: #0f1923;
+    --card-bg: #0d2137;
+    --accent: #e63946;
+    --text-main: #f0ece0;
+    --text-muted: #8fa3b1;
+    --border: rgba(201,168,76,0.3);
+  }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: #0a0f18;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #0d1f2d 0%, #0f2a1e 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .header-icon {
+    width: 48px; height: 48px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+  }
+  header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
+
+  /* ── Layout ── */
+  .main {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 80px);
+  }
+
+  /* ── Form Panel ── */
+  .form-panel {
+    background: #0d1a28;
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+  .section-label {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin: 1.2rem 0 0.8rem;
+    text-transform: uppercase;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .form-group { margin-bottom: 0.75rem; }
+  .form-group label {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group input[type="tel"],
+  .form-group select {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-main);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--gold);
+  }
+  .form-group select option { background: #0d1a28; }
+
+  /* Photo upload */
+  .photo-upload {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .photo-preview {
+    width: 90px; height: 110px;
+    border: 2px dashed rgba(201,168,76,0.4);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .photo-preview:hover { border-color: var(--gold); }
+  .photo-preview img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .photo-preview-text { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
+  .photo-upload-right { flex: 1; }
+
+  /* Logo upload */
+  .logo-upload-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .logo-preview {
+    width: 56px; height: 56px;
+    border: 2px dashed rgba(201,168,76,0.4);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  .logo-preview:hover { border-color: var(--gold); }
+  .logo-preview img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .logo-preview-text { font-size: 1.2rem; }
+
+  /* Roles checkboxes */
+  .role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .role-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 6px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .role-check:hover { border-color: rgba(201,168,76,0.4); }
+  .role-check input { display: none; }
+  .role-check.checked {
+    background: rgba(201,168,76,0.12);
+    border-color: var(--gold);
+  }
+  .role-check .dot {
+    width: 14px; height: 14px;
+    border: 1.5px solid rgba(201,168,76,0.5);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .role-check.checked .dot {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+  .role-check .dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: #0d1a28;
+    clip-path: polygon(20% 50%, 40% 70%, 80% 20%, 90% 30%, 40% 85%, 10% 60%);
+    display: none;
+  }
+  .role-check.checked .dot::after { display: block; }
+  .role-check span { font-size: 0.82rem; color: var(--text-main); }
+
+  /* Handedness radios */
+  .hand-row {
+    display: flex;
+    gap: 8px;
+  }
+  .hand-btn {
+    flex: 1;
+    padding: 7px;
+    text-align: center;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .hand-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--text-main); }
+  .hand-btn.active {
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .jersey-row { display: flex; gap: 8px; }
+  .jersey-row input[type="number"] { width: 80px; }
+
+  .gen-btn {
+    width: 100%;
+    margin-top: 1.2rem;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--gold), #a07830);
+    border: none;
+    border-radius: 8px;
+    color: #0d1a28;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .gen-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .gen-btn:active { transform: translateY(0); }
+
+  /* ── Preview Panel ── */
+  .preview-panel {
+    background: #070e18;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+  .preview-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+    letter-spacing: 4px;
+    color: var(--text-muted);
+  }
+
+  /* ── Player Card ── */
+  .player-card {
+    width: 340px;
+    background: linear-gradient(160deg, #0d2137 0%, #071525 60%, #0d1a10 100%);
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.1);
+  }
+
+  /* Top diagonal accent */
+  .card-top-bar {
+    height: 6px;
+    background: linear-gradient(90deg, var(--gold), #e63946, var(--gold));
+  }
+
+  .card-header {
+    padding: 1rem 1rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .tournament-info { flex: 1; }
+  .tournament-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+  .tournament-year {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+  }
+  .club-logo-circle {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: rgba(201,168,76,0.1);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    font-size: 0.65rem;
+    color: var(--gold);
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .club-logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Player image area */
+  .card-player-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 0.5rem 0 0;
+  }
+  .player-img-frame {
+    width: 140px; height: 160px;
+    position: relative;
+  }
+  .player-img-frame::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold), transparent, rgba(230,57,70,0.5));
+    z-index: 0;
+  }
+  .player-img-frame img,
+  .player-img-placeholder {
+    position: relative;
+    z-index: 1;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+  }
+  .player-img-placeholder {
+    background: linear-gradient(135deg, #1a3a55, #0d2035);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+  }
+
+  /* Jersey number badge */
+  .jersey-badge {
+    position: absolute;
+    bottom: -10px;
+    right: 70px;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.3rem;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #0d2137;
+    z-index: 2;
+  }
+
+  /* Name plate */
+  .card-name-plate {
+    text-align: center;
+    padding: 0.8rem 1rem 0.5rem;
+    position: relative;
+  }
+  .player-full-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
+  .player-role-tags {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .role-tag {
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.4);
+    color: var(--gold-light);
+    font-size: 0.62rem;
+    letter-spacing: 1.5px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .role-tag.red {
+    background: rgba(230,57,70,0.15);
+    border-color: rgba(230,57,70,0.4);
+    color: #ff8a93;
+  }
+
+  /* Stats strip */
+  .card-stats {
+    display: flex;
+    border-top: 1px solid rgba(201,168,76,0.2);
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    margin: 0 0.5rem;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    border-right: 1px solid rgba(201,168,76,0.15);
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-label {
+    font-size: 0.58rem;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    line-height: 1.2;
+  }
+  .stat-value.small { font-size: 0.75rem; }
+
+  /* Footer info */
+  .card-footer {
+    padding: 0.6rem 1rem 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-detail {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+  .footer-detail strong { color: var(--text-main); font-weight: 600; }
+
+  /* Decorative corner lines */
+  .corner-tl, .corner-br {
+    position: absolute;
+    width: 24px; height: 24px;
+  }
+  .corner-tl { top: 8px; left: 8px; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); opacity: 0.5; }
+  .corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); opacity: 0.5; }
+
+  /* Download */
+  .download-btn {
+    padding: 10px 28px;
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    border-radius: 6px;
+    color: var(--gold);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .download-btn:hover {
+    background: rgba(201,168,76,0.1);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    margin-top: 3rem;
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; letter-spacing: 1px; }
+
+  /* hidden file inputs */
+  input[type="file"] { display: none; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .preview-panel { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🏏</div>
+  <div>
+    <h1>Player Card Generator</h1>
+    <p>CRICKET TOURNAMENT MANAGEMENT SYSTEM</p>
+  </div>
+</header>
+
+<div class="main">
+  <!-- FORM PANEL -->
+  <div class="form-panel">
+
+    <div class="section-label">Tournament Info</div>
+    <div class="form-group">
+      <label>Tournament Name</label>
+      <input type="text" id="tournamentName" placeholder="e.g. Premier League 2025" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Season / Year</label>
+      <input type="text" id="tournamentYear" placeholder="e.g. 2025" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Club / Team Logo</label>
+      <div class="logo-upload-row">
+        <div class="logo-preview" onclick="document.getElementById('logoInput').click()" id="logoPreview">
+          <span class="logo-preview-text">🏆</span>
+        </div>
+        <input type="file" id="logoInput" accept="image/*" onchange="loadLogo(event)">
+        <input type="text" id="clubName" placeholder="Club / Team name" oninput="updateCard()" style="flex:1">
+      </div>
+    </div>
+
+    <div class="section-label">Player Details</div>
+    <div class="form-group">
+      <label>Player Photo</label>
+      <div class="photo-upload">
+        <div class="photo-preview" onclick="document.getElementById('photoInput').click()" id="photoPreview">
+          <div class="photo-preview-text">📷<br>Upload<br>Photo</div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" onchange="loadPhoto(event)">
+        <div class="photo-upload-right">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="playerName" placeholder="e.g. Virat Kohli" oninput="updateCard()">
+          </div>
+          <div class="form-group">
+            <label>Jersey Number</label>
+            <input type="number" id="jerseyNumber" placeholder="18" min="1" max="99" oninput="updateCard()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Age</label>
+      <input type="number" id="playerAge" placeholder="e.g. 24" min="10" max="60" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="tel" id="playerPhone" placeholder="+94 77 123 4567" oninput="updateCard()">
+    </div>
+    <div class="form-group">
+      <label>Nationality / Region</label>
+      <input type="text" id="playerNationality" placeholder="e.g. Sri Lanka" oninput="updateCard()">
+    </div>
+
+    <div class="section-label">Batting</div>
+    <div class="form-group">
+      <label>Batting Hand</label>
+      <div class="hand-row" id="battingHand">
+        <div class="hand-btn active" onclick="selectHand('battingHand', 'Right Hand')">Right Hand</div>
+        <div class="hand-btn" onclick="selectHand('battingHand', 'Left Hand')">Left Hand</div>
+      </div>
+    </div>
+
+    <div class="section-label">Bowling</div>
+    <div class="form-group">
+      <label>Bowling Hand</label>
+      <div class="hand-row" id="bowlingHand">
+        <div class="hand-btn active" onclick="selectHand('bowlingHand', 'Right Arm')">Right Arm</div>
+        <div class="hand-btn" onclick="selectHand('bowlingHand', 'Left Arm')">Left Arm</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Bowling Style</label>
+      <select id="bowlingStyle" onchange="updateCard()">
+        <option value="">— Select —</option>
+        <option>Fast</option>
+        <option>Fast-Medium</option>
+        <option>Medium</option>
+        <option>Off Spin</option>
+        <option>Leg Spin</option>
+        <option>Slow Left Arm</option>
+        <option>Chinaman</option>
+      </select>
+    </div>
+
+    <div class="section-label">Player Role</div>
+    <div class="role-grid" id="roleGrid">
+      <div class="role-check" onclick="toggleRole(this, 'Batsman')">
+        <input type="checkbox"><div class="dot"></div><span>Batsman</span>
+      </div>
+      <div class="role-check" onclick="toggleRole(this, 'Bowler')">
+        <input type="checkbox"><div class="dot"></div><span>Bowler</span>
+      </div>
+      <div class="role-check" onclick="toggleRole(this, 'All-Rounder')">
+        <input type="checkbox"><div class="dot"></div><span>All-Rounder</span>
+      </div>
+      <div class="role-check" onclick="toggleRole(this, 'Batting All-Rounder')">
+        <input type="checkbox"><div class="dot"></div><span>Batting AR</span>
+      </div>
+      <div class="role-check" onclick="toggleRole(this, 'Bowling All-Rounder')">
+        <input type="checkbox"><div class="dot"></div><span>Bowling AR</span>
+      </div>
+      <div class="role-check" onclick="toggleRole(this, 'Wicket-Keeper')">
+        <input type="checkbox"><div class="dot"></div><span>Wicket-Keeper</span>
+      </div>
+    </div>
+
+    <button class="gen-btn" onclick="generateCard()">⚡ Generate Player Card</button>
+  </div>
+
+  <!-- PREVIEW PANEL -->
+  <div class="preview-panel" id="previewPanel">
+    <div class="preview-title">CARD PREVIEW</div>
+    <div class="empty-state" id="emptyState">
+      <div class="icon">🏏</div>
+      <p>Fill in the player details<br>and click Generate</p>
+    </div>
+    <div id="cardContainer" style="display:none; flex-direction:column; align-items:center; gap:1.5rem;">
+      <div class="player-card" id="playerCard">
+        <div class="card-top-bar"></div>
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="card-header">
+          <div class="tournament-info">
+            <div class="tournament-name" id="card-tournament">TOURNAMENT NAME</div>
+            <div class="tournament-year" id="card-year">2025</div>
+          </div>
+          <div class="club-logo-circle" id="card-logo">
+            <span>LOGO</span>
+          </div>
+        </div>
+        <div class="card-player-area">
+          <div class="player-img-frame">
+            <div class="player-img-placeholder" id="card-photo">🧑</div>
+          </div>
+          <div class="jersey-badge" id="card-jersey" style="display:none"></div>
+        </div>
+        <div class="card-name-plate">
+          <div class="player-full-name" id="card-name">PLAYER NAME</div>
+          <div class="player-role-tags" id="card-roles"></div>
+        </div>
+        <div class="card-stats" id="card-stats">
+          <div class="stat-cell">
+            <div class="stat-label">Batting</div>
+            <div class="stat-value small" id="stat-batting">RHB</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-label">Bowling</div>
+            <div class="stat-value small" id="stat-bowling">RAM</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-label">Age</div>
+            <div class="stat-value" id="stat-age">—</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-label">Jersey</div>
+            <div class="stat-value" id="stat-jersey">—</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="footer-detail"><strong id="card-nationality">Sri Lanka</strong></div>
+          <div class="footer-detail" id="card-club">—</div>
+        </div>
+      </div>
+      <button class="download-btn" onclick="downloadCard()">⬇ DOWNLOAD CARD</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  let playerPhotoSrc = null;
+  let logoSrc = null;
+  let selectedRoles = new Set();
+  let battingHandVal = 'Right Hand';
+  let bowlingHandVal = 'Right Arm';
+
+  function selectHand(groupId, value) {
+    const group = document.getElementById(groupId);
+    group.querySelectorAll('.hand-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    if (groupId === 'battingHand') battingHandVal = value;
+    else bowlingHandVal = value;
+    updateCard();
+  }
+
+  function toggleRole(el, role) {
+    el.classList.toggle('checked');
+    if (selectedRoles.has(role)) selectedRoles.delete(role);
+    else selectedRoles.add(role);
+    updateCard();
+  }
+
+  function loadPhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      playerPhotoSrc = ev.target.result;
+      const prev = document.getElementById('photoPreview');
+      prev.innerHTML = `<img src="${playerPhotoSrc}" alt="player">`;
+      updateCard();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function loadLogo(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      logoSrc = ev.target.result;
+      const prev = document.getElementById('logoPreview');
+      prev.innerHTML = `<img src="${logoSrc}" alt="logo">`;
+      updateCard();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function updateCard() {
+    // keep card in sync live
+  }
+
+  function generateCard() {
+    const name = document.getElementById('playerName').value.trim();
+    const tournament = document.getElementById('tournamentName').value.trim();
+    const year = document.getElementById('tournamentYear').value.trim();
+    const club = document.getElementById('clubName').value.trim();
+    const age = document.getElementById('playerAge').value.trim();
+    const jersey = document.getElementById('jerseyNumber').value.trim();
+    const nationality = document.getElementById('playerNationality').value.trim();
+    const bowlingStyle = document.getElementById('bowlingStyle').value;
+
+    document.getElementById('emptyState').style.display = 'none';
+    const container = document.getElementById('cardContainer');
+    container.style.display = 'flex';
+
+    // Tournament
+    document.getElementById('card-tournament').textContent = tournament || 'TOURNAMENT NAME';
+    document.getElementById('card-year').textContent = year || '2025';
+
+    // Club logo
+    const logoEl = document.getElementById('card-logo');
+    if (logoSrc) {
+      logoEl.innerHTML = `<img src="${logoSrc}" alt="logo">`;
+    } else {
+      logoEl.innerHTML = `<span style="font-size:0.6rem;letter-spacing:0;padding:2px;text-align:center">${club || 'LOGO'}</span>`;
+    }
+
+    // Player photo
+    const photoEl = document.getElementById('card-photo');
+    if (playerPhotoSrc) {
+      photoEl.outerHTML = `<img src="${playerPhotoSrc}" id="card-photo" style="position:relative;z-index:1;width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;" alt="player">`;
+    } else {
+      document.getElementById('card-photo').textContent = '🧑';
+    }
+
+    // Name
+    document.getElementById('card-name').textContent = name.toUpperCase() || 'PLAYER NAME';
+
+    // Jersey badge
+    const jerseyBadge = document.getElementById('card-jersey');
+    if (jersey) {
+      jerseyBadge.textContent = '#' + jersey;
+      jerseyBadge.style.display = 'flex';
+    } else {
+      jerseyBadge.style.display = 'none';
+    }
+
+    // Roles
+    const rolesContainer = document.getElementById('card-roles');
+    rolesContainer.innerHTML = '';
+    selectedRoles.forEach(role => {
+      const tag = document.createElement('span');
+      tag.className = 'role-tag' + (role === 'Wicket-Keeper' ? ' red' : '');
+      tag.textContent = role;
+      rolesContainer.appendChild(tag);
+    });
+
+    // Stats
+    const battShort = battingHandVal === 'Left Hand' ? 'LHB' : 'RHB';
+    const bowlShort = (() => {
+      const arm = bowlingHandVal === 'Left Arm' ? 'LA' : 'RA';
+      const styleMap = {
+        'Fast': 'F', 'Fast-Medium': 'FM', 'Medium': 'M',
+        'Off Spin': 'OS', 'Leg Spin': 'LS', 'Slow Left Arm': 'SLA', 'Chinaman': 'CHN', '': ''
+      };
+      return arm + (styleMap[bowlingStyle] || '');
+    })();
+    document.getElementById('stat-batting').textContent = battShort;
+    document.getElementById('stat-bowling').textContent = bowlShort || '—';
+    document.getElementById('stat-age').textContent = age || '—';
+    document.getElementById('stat-jersey').textContent = jersey ? '#' + jersey : '—';
+    document.getElementById('card-nationality').textContent = nationality || '—';
+    document.getElementById('card-club').textContent = club || '';
+  }
+
+  function downloadCard() {
+    const card = document.getElementById('playerCard');
+    html2canvas(card, {
+      backgroundColor: null,
+      scale: 3,
+      useCORS: true,
+      allowTaint: true
+    }).then(canvas => {
+      const link = document.createElement('a');
+      const name = (document.getElementById('playerName').value.trim() || 'player').replace(/\s+/g, '_').toLowerCase();
+      link.download = `player_card_${name}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+</script>
+</body>
+</html>
