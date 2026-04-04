@@ -29,13 +29,8 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
     reader.readAsDataURL(file);
   };
 
-  const toggleRole = (role: string) => {
-    setState(prev => {
-      const roles = prev.roles.includes(role)
-        ? prev.roles.filter(r => r !== role)
-        : [...prev.roles, role];
-      return { ...prev, roles };
-    });
+  const selectRole = (role: string) => {
+    setState(prev => ({ ...prev, roles: [role] }));
   };
 
   return (
@@ -114,25 +109,12 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
           <div className={`hand-btn ${state.bowlingHand === 'Left Arm' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, bowlingHand: 'Left Arm' }))}>Left Arm</div>
         </div>
       </div>
-      <div className="form-group">
-        <label>Bowling Style</label>
-        <select name="bowlingStyle" value={state.bowlingStyle} onChange={handleInput}>
-          <option value="">— Select —</option>
-          <option>Fast</option>
-          <option>Fast-Medium</option>
-          <option>Medium</option>
-          <option>Off Spin</option>
-          <option>Leg Spin</option>
-          <option>Slow Left Arm</option>
-          <option>Chinaman</option>
-        </select>
-      </div>
 
       <div className="section-label">Player Role</div>
       <div className="role-grid">
-        {['Batsman', 'Bowler', 'All-Rounder', 'Batting All-Rounder', 'Bowling All-Rounder', 'Wicket-Keeper'].map(role => (
-          <div key={role} className={`role-check ${state.roles.includes(role) ? 'checked' : ''}`} onClick={() => toggleRole(role)}>
-            <div className="dot"></div><span>{role === 'Batting All-Rounder' ? 'Batting AR' : role === 'Bowling All-Rounder' ? 'Bowling AR' : role}</span>
+        {['Batsman', 'Bowler', 'Wicket Keeper', 'Batting All Rounder', 'Bowling All Rounder'].map(role => (
+          <div key={role} className={`role-check ${state.roles.includes(role) ? 'checked' : ''}`} onClick={() => selectRole(role)}>
+            <div className="dot"></div><span>{role}</span>
           </div>
         ))}
       </div>
