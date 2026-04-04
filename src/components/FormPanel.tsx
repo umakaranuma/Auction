@@ -10,9 +10,10 @@ interface FormPanelProps {
   onEditTournament: () => void;
   onNewPlayer: () => void;
   showCard: boolean;
+  saving?: boolean;
 }
 
-export default function FormPanel({ state, setState, tournament, onGenerate, onEditTournament, onNewPlayer, showCard }: FormPanelProps) {
+export default function FormPanel({ state, setState, tournament, onGenerate, onEditTournament, onNewPlayer, showCard, saving }: FormPanelProps) {
   const handleInput = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setState(prev => ({ ...prev, [name]: value }));
@@ -24,7 +25,7 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setState(prev => ({ ...prev, playerPhotoSrc: dataUrl }));
+      setState(prev => ({ ...prev, playerPhotoSrc: dataUrl, playerPhotoFile: file }));
     };
     reader.readAsDataURL(file);
   };
@@ -120,7 +121,9 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
       </div>
 
       <div className="form-actions">
-        <button className="gen-btn" onClick={onGenerate}>⚡ Generate Player Card</button>
+        <button className="gen-btn" onClick={onGenerate} disabled={saving}>
+          {saving ? '⏳ SAVING...' : '⚡ Generate Player Card'}
+        </button>
         {showCard && (
           <button className="new-player-btn" onClick={onNewPlayer}>➕ NEW PLAYER</button>
         )}

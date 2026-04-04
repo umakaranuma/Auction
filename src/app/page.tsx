@@ -5,9 +5,11 @@ import TournamentSetup from '../components/TournamentSetup';
 import FormPanel from '../components/FormPanel';
 import PreviewPanel from '../components/PreviewPanel';
 import { PlayerCardState, TournamentInfo } from '../types';
+import { createTournament, createPlayer } from '../lib/api';
 
 const defaultPlayerFields: Omit<PlayerCardState, keyof TournamentInfo> = {
   playerPhotoSrc: null,
+  playerPhotoFile: null,
   playerName: '',
   jerseyNumber: '',
   playerAge: '',
@@ -24,10 +26,14 @@ export default function Home() {
     tournamentName: '',
     tournamentYear: '',
     clubLogoSrc: null,
+    clubLogoFile: null,
     clubName: '',
   });
 
+  const [tournamentId, setTournamentId] = useState<number | null>(null);
   const [tournamentLocked, setTournamentLocked] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const [state, setState] = useState<PlayerCardState>({
     ...tournament,
@@ -36,12 +42,32 @@ export default function Home() {
 
   const [showCard, setShowCard] = useState(false);
 
-  const handleLockTournament = () => {
-    setTournamentLocked(true);
-    setState(prev => ({
-      ...prev,
-      ...tournament,
-    }));
+  const handleLockTournament = async () => {
+    try {
+      setSaving(true);
+      const result = await createTournament({
+        name: tournament.tournamentName,
+        year: tournament.tournamentYear,
+        club_name: tournament.clubName,
+        club_logo: tournament.clubLogoFile,
+      });
+      setTournamentId(result.id);
+      setTournamentLocked(true);
+      setState(prev => ({
+        ...prev,
+        ...tournament,
+      }));
+    } catch (error) {
+      console.error('Failed to save tournament:', error);
+      // Still allow to proceed even if save fails
+      setTournamentLocked(true);
+      setState(prev => ({
+        ...prev,
+        ...tournament,
+      }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEditTournament = () => {
@@ -49,8 +75,34 @@ export default function Home() {
     setShowCard(false);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setShowCard(true);
+    setSaveMessage(null);
+
+    // Save player to backend
+    if (tournamentId && state.playerName.trim()) {
+      try {
+        setSaving(true);
+        await createPlayer({
+          tournament: tournamentId,
+          name: state.playerName,
+          photo: state.playerPhotoFile,
+          jersey_number: state.jerseyNumber,
+          age: state.playerAge,
+          phone: state.playerPhone,
+          nationality: state.playerNationality,
+          batting_hand: state.battingHand,
+          bowling_hand: state.bowlingHand,
+          role: state.roles.length > 0 ? state.roles[0] : '',
+        });
+        setSaveMessage('✅ Player saved successfully!');
+      } catch (error) {
+        console.error('Failed to save player:', error);
+        setSaveMessage('⚠️ Card generated but failed to save to database');
+      } finally {
+        setSaving(false);
+      }
+    }
   };
 
   const handleNewPlayer = () => {
@@ -59,13 +111,19 @@ export default function Home() {
       ...defaultPlayerFields,
     });
     setShowCard(false);
+    setSaveMessage(null);
   };
 
   if (!tournamentLocked) {
     return (
       <>
         <Header />
-        <TournamentSetup tournament={tournament} setTournament={setTournament} onContinue={handleLockTournament} />
+        <TournamentSetup
+          tournament={tournament}
+          setTournament={setTournament}
+          onContinue={handleLockTournament}
+          saving={saving}
+        />
       </>
     );
   }
@@ -82,8 +140,9 @@ export default function Home() {
           onEditTournament={handleEditTournament}
           onNewPlayer={handleNewPlayer}
           showCard={showCard}
+          saving={saving}
         />
-        <PreviewPanel state={state} showCard={showCard} />
+        <PreviewPanel state={state} showCard={showCard} saveMessage={saveMessage} />
       </div>
     </>
   );

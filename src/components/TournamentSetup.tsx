@@ -6,9 +6,10 @@ interface TournamentSetupProps {
   tournament: TournamentInfo;
   setTournament: React.Dispatch<React.SetStateAction<TournamentInfo>>;
   onContinue: () => void;
+  saving?: boolean;
 }
 
-export default function TournamentSetup({ tournament, setTournament, onContinue }: TournamentSetupProps) {
+export default function TournamentSetup({ tournament, setTournament, onContinue, saving }: TournamentSetupProps) {
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTournament(prev => ({ ...prev, [name]: value }));
@@ -20,7 +21,7 @@ export default function TournamentSetup({ tournament, setTournament, onContinue 
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setTournament(prev => ({ ...prev, clubLogoSrc: dataUrl }));
+      setTournament(prev => ({ ...prev, clubLogoSrc: dataUrl, clubLogoFile: file }));
     };
     reader.readAsDataURL(file);
   };
@@ -64,8 +65,8 @@ export default function TournamentSetup({ tournament, setTournament, onContinue 
             </div>
           </div>
 
-          <button className="gen-btn" onClick={onContinue} disabled={!canContinue} style={{ opacity: canContinue ? 1 : 0.5 }}>
-            🎯 CONTINUE TO PLAYER CARDS
+          <button className="gen-btn" onClick={onContinue} disabled={!canContinue || saving} style={{ opacity: canContinue && !saving ? 1 : 0.5 }}>
+            {saving ? '⏳ SAVING...' : '🎯 CONTINUE TO PLAYER CARDS'}
           </button>
         </div>
       </div>
