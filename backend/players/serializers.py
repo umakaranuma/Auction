@@ -10,7 +10,9 @@ class PlayerSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'tournament', 'name', 'photo', 'photo_url',
             'jersey_number', 'age', 'phone', 'nationality',
-            'batting_hand', 'bowling_hand', 'role', 'created_at',
+            'batting_hand', 'bowling_hand', 'role',
+            'auction_status', 'sold_price', 'sold_to',
+            'created_at',
         ]
         extra_kwargs = {
             'photo': {'write_only': True, 'required': False},
@@ -23,6 +25,13 @@ class PlayerSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.photo.url)
             return obj.photo.url
         return None
+
+
+class PlayerAuctionStatusSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for updating auction status only."""
+    class Meta:
+        model = Player
+        fields = ['id', 'auction_status', 'sold_price', 'sold_to']
 
 
 class TournamentSerializer(serializers.ModelSerializer):

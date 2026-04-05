@@ -31,6 +31,11 @@ class Player(models.Model):
         ('Batting All Rounder', 'Batting All Rounder'),
         ('Bowling All Rounder', 'Bowling All Rounder'),
     ]
+    AUCTION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('sold', 'Sold'),
+        ('unsold', 'Unsold'),
+    ]
 
     tournament = models.ForeignKey(
         Tournament, on_delete=models.CASCADE, related_name='players'
@@ -50,6 +55,13 @@ class Player(models.Model):
     role = models.CharField(
         max_length=30, choices=ROLE_CHOICES, blank=True, default=''
     )
+    auction_status = models.CharField(
+        max_length=10, choices=AUCTION_STATUS_CHOICES, default='pending'
+    )
+    sold_price = models.DecimalField(
+        max_digits=12, decimal_places=2, blank=True, null=True
+    )
+    sold_to = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

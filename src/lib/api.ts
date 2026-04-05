@@ -36,6 +36,15 @@ export async function getTournament(id: number) {
   return res.json();
 }
 
+export async function resetAuction(tournamentId: number) {
+  const res = await fetch(`${API_BASE}/tournaments/${tournamentId}/reset-auction/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to reset auction');
+  return res.json();
+}
+
 // ── Player API ─────────────────────────────
 
 export async function createPlayer(data: {
@@ -89,4 +98,21 @@ export async function deletePlayer(id: number) {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Failed to delete player');
+}
+
+export async function updatePlayerAuctionStatus(
+  playerId: number,
+  data: {
+    auction_status: 'pending' | 'sold' | 'unsold';
+    sold_price?: number | null;
+    sold_to?: string;
+  }
+) {
+  const res = await fetch(`${API_BASE}/players/${playerId}/auction-status/`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to update auction status');
+  return res.json();
 }
