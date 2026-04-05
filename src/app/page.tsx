@@ -1,11 +1,15 @@
 'use client';
 import React, { useState } from 'react';
 import Header from '../components/Header';
+import TournamentPicker from '../components/TournamentPicker';
 import TournamentSetup from '../components/TournamentSetup';
 import FormPanel from '../components/FormPanel';
 import PreviewPanel from '../components/PreviewPanel';
+import AuctionWheel from '../components/AuctionWheel';
 import { PlayerCardState, TournamentInfo } from '../types';
 import { createTournament, createPlayer } from '../lib/api';
+
+type AppView = 'picker' | 'setup' | 'create' | 'wheel';
 
 const defaultPlayerFields: Omit<PlayerCardState, keyof TournamentInfo> = {
   playerPhotoSrc: null,
@@ -21,7 +25,18 @@ const defaultPlayerFields: Omit<PlayerCardState, keyof TournamentInfo> = {
   roles: [],
 };
 
+interface SelectedTournament {
+  id: number;
+  name: string;
+  year: string;
+  club_name: string;
+  club_logo_url: string | null;
+}
+
 export default function Home() {
+  const [view, setView] = useState<AppView>('picker');
+  const [selectedTournament, setSelectedTournament] = useState<SelectedTournament | null>(null);
+
   const [tournament, setTournament] = useState<TournamentInfo>({
     tournamentName: '',
     tournamentYear: '',
@@ -31,9 +46,9 @@ export default function Home() {
   });
 
   const [tournamentId, setTournamentId] = useState<number | null>(null);
-  const [tournamentLocked, setTournamentLocked] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [mode, setMode] = useState<'create' | 'wheel'>('create');
 
   const [state, setState] = useState<PlayerCardState>({
     ...tournament,
@@ -41,6 +56,48 @@ export default function Home() {
   });
 
   const [showCard, setShowCard] = useState(false);
+
+  // Handle picking an existing tournament (go to wheel directly)
+  const handlePickTournament = (t: {
+    id: number;
+    name: string;
+    year: string;
+    club_name: string;
+    club_logo_url: string | null;
+  }) => {
+    setSelectedTournament(t);
+    setTournamentId(t.id);
+    setTournament({
+      tournamentName: t.name,
+      tournamentYear: t.year,
+      clubLogoSrc: t.club_logo_url,
+      clubLogoFile: null,
+      clubName: t.club_name,
+    });
+    setState((prev) => ({
+      ...prev,
+      tournamentName: t.name,
+      tournamentYear: t.year,
+      clubLogoSrc: t.club_logo_url,
+      clubLogoFile: null,
+      clubName: t.club_name,
+    }));
+    setView('wheel');
+  };
+
+  // Handle creating a new tournament
+  const handleCreateNew = () => {
+    setTournament({
+      tournamentName: '',
+      tournamentYear: '',
+      clubLogoSrc: null,
+      clubLogoFile: null,
+      clubName: '',
+    });
+    setTournamentId(null);
+    setSelectedTournament(null);
+    setView('setup');
+  };
 
   const handleLockTournament = async () => {
     try {
@@ -52,16 +109,24 @@ export default function Home() {
         club_logo: tournament.clubLogoFile,
       });
       setTournamentId(result.id);
-      setTournamentLocked(true);
-      setState(prev => ({
+      setSelectedTournament({
+        id: result.id,
+        name: tournament.tournamentName,
+        year: tournament.tournamentYear,
+        club_name: tournament.clubName,
+        club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
+      });
+      setState((prev) => ({
         ...prev,
         ...tournament,
       }));
+      setMode('create');
+      setView('create');
     } catch (error) {
       console.error('Failed to save tournament:', error);
-      // Still allow to proceed even if save fails
-      setTournamentLocked(true);
-      setState(prev => ({
+      setMode('create');
+      setView('create');
+      setState((prev) => ({
         ...prev,
         ...tournament,
       }));
@@ -71,7 +136,7 @@ export default function Home() {
   };
 
   const handleEditTournament = () => {
-    setTournamentLocked(false);
+    setView('setup');
     setShowCard(false);
   };
 
@@ -79,7 +144,6 @@ export default function Home() {
     setShowCard(true);
     setSaveMessage(null);
 
-    // Save player to backend
     if (tournamentId && state.playerName.trim()) {
       try {
         setSaving(true);
@@ -114,10 +178,37 @@ export default function Home() {
     setSaveMessage(null);
   };
 
-  if (!tournamentLocked) {
+  const handleBackToPicker = () => {
+    setView('picker');
+    setSelectedTournament(null);
+    setTournamentId(null);
+    setShowCard(false);
+    setSaveMessage(null);
+  };
+
+  // ── VIEW: Tournament Picker (Home) ──
+  if (view === 'picker') {
     return (
       <>
         <Header />
+        <TournamentPicker
+          onSelect={handlePickTournament}
+          onCreateNew={handleCreateNew}
+        />
+      </>
+    );
+  }
+
+  // ── VIEW: Tournament Setup (Create New) ──
+  if (view === 'setup') {
+    return (
+      <>
+        <Header />
+        <div className="setup-back-row">
+          <button className="auction-back-btn" onClick={handleBackToPicker}>
+            ← Back to Tournaments
+          </button>
+        </div>
         <TournamentSetup
           tournament={tournament}
           setTournament={setTournament}
@@ -128,22 +219,94 @@ export default function Home() {
     );
   }
 
+  // ── VIEW: Wheel (selected an existing tournament) ──
+  if (view === 'wheel') {
+    return (
+      <>
+        <Header />
+        {/* Mode Switcher Tabs */}
+        <div className="mode-switcher">
+          <button
+            className="mode-tab"
+            onClick={handleBackToPicker}
+          >
+            ← Tournaments
+          </button>
+          <button
+            className={`mode-tab ${mode === 'create' ? 'active' : ''}`}
+            onClick={() => { setMode('create'); setView('create'); }}
+          >
+            🏏 Create Player Card
+          </button>
+          <button
+            className={`mode-tab ${mode === 'wheel' ? 'active' : ''}`}
+            onClick={() => setMode('wheel')}
+          >
+            🎰 Auction Wheel
+          </button>
+        </div>
+        <AuctionWheel
+          tournamentId={tournamentId}
+          tournamentName={tournament.tournamentName}
+          tournamentYear={tournament.tournamentYear}
+          clubLogoSrc={tournament.clubLogoSrc}
+          clubName={tournament.clubName}
+          onBack={handleBackToPicker}
+        />
+      </>
+    );
+  }
+
+  // ── VIEW: Create Player Card ──
   return (
     <>
       <Header />
-      <div className="main">
-        <FormPanel
-          state={state}
-          setState={setState}
-          tournament={tournament}
-          onGenerate={handleGenerate}
-          onEditTournament={handleEditTournament}
-          onNewPlayer={handleNewPlayer}
-          showCard={showCard}
-          saving={saving}
-        />
-        <PreviewPanel state={state} showCard={showCard} saveMessage={saveMessage} />
+      {/* Mode Switcher Tabs */}
+      <div className="mode-switcher">
+        <button
+          className="mode-tab"
+          onClick={handleBackToPicker}
+        >
+          ← Tournaments
+        </button>
+        <button
+          className={`mode-tab ${mode === 'create' ? 'active' : ''}`}
+          onClick={() => setMode('create')}
+        >
+          🏏 Create Player Card
+        </button>
+        <button
+          className={`mode-tab ${mode === 'wheel' ? 'active' : ''}`}
+          onClick={() => { setMode('wheel'); setView('wheel'); }}
+        >
+          🎰 Auction Wheel
+        </button>
       </div>
+
+      {mode === 'create' ? (
+        <div className="main">
+          <FormPanel
+            state={state}
+            setState={setState}
+            tournament={tournament}
+            onGenerate={handleGenerate}
+            onEditTournament={handleEditTournament}
+            onNewPlayer={handleNewPlayer}
+            showCard={showCard}
+            saving={saving}
+          />
+          <PreviewPanel state={state} showCard={showCard} saveMessage={saveMessage} />
+        </div>
+      ) : (
+        <AuctionWheel
+          tournamentId={tournamentId}
+          tournamentName={tournament.tournamentName}
+          tournamentYear={tournament.tournamentYear}
+          clubLogoSrc={tournament.clubLogoSrc}
+          clubName={tournament.clubName}
+          onBack={handleBackToPicker}
+        />
+      )}
     </>
   );
 }
