@@ -36,6 +36,8 @@ interface AuctionWheelProps {
   clubName: string;
   players: PlayerFromAPI[];
   teams: TeamFromAPI[];
+  teamTotalBudget: number;
+  maxPlayersPerTeam: number;
   onUpdateStatus: (
     playerId: number,
     status: 'sold' | 'unsold',
@@ -56,6 +58,8 @@ export default function AuctionWheel({
   clubName,
   players,
   teams,
+  teamTotalBudget,
+  maxPlayersPerTeam,
   onUpdateStatus,
   onResetAuction,
   onRefreshPlayers,
@@ -76,6 +80,20 @@ export default function AuctionWheel({
   const unsoldPlayers = players.filter((p) => p.auction_status === 'unsold');
 
   const eligiblePlayers = auctionRound === 1 ? round1Players : round2Players;
+
+  // Compute team stats
+  const teamStats = teams.map((team) => {
+    const teamPlayers = soldPlayers.filter((p) => p.sold_to === team.name);
+    const spent = teamPlayers.reduce((sum, p) => sum + (Number(p.sold_price) || 0), 0);
+    const count = teamPlayers.length;
+    return {
+      ...team,
+      spent,
+      remainingBudget: teamTotalBudget - spent,
+      count,
+      remainingPlayersNeeded: Math.max(0, maxPlayersPerTeam - count),
+    };
+  });
 
   // Check if round 1 is complete (no pending players left)
   const round1Complete = round1Players.length === 0 && players.length > 0;
@@ -175,6 +193,8 @@ export default function AuctionWheel({
         bowlingHand: selectedPlayer.bowling_hand,
         bowlingStyle: '',
         roles: selectedPlayer.role ? [selectedPlayer.role] : [],
+        teamTotalBudget,
+        maxPlayersPerTeam,
       }
     : null;
 
@@ -217,6 +237,32 @@ export default function AuctionWheel({
         <button className="auction-reset-btn" onClick={handleReset} title="Reset entire auction">
           🔄 Reset
         </button>
+      </div>
+
+      {/* Team Stats Panel */}
+      <div className="auction-team-stats">
+        <h3 className="auction-team-stats-title">Team Standings (Budget: ₹{teamTotalBudget.toLocaleString()} · Max: {maxPlayersPerTeam})</h3>
+        <div className="auction-team-stats-grid">
+          {teamStats.map(ts => (
+            <div key={ts.id} className="team-stat-card">
+              <div className="team-stat-logo">
+                {ts.logo_url ? <img src={ts.logo_url} alt={ts.name} /> : <span>{ts.name.charAt(0)}</span>}
+              </div>
+              <div className="team-stat-info">
+                <div className="team-stat-name">{ts.name}</div>
+                <div className="team-stat-details">
+                  <span className={ts.remainingBudget < 0 ? 'budget-over' : 'budget-ok'}>
+                    rem: ₹{ts.remainingBudget.toLocaleString()}
+                  </span>
+                  {' · '}
+                  <span className={ts.remainingPlayersNeeded <= 0 ? 'roster-full' : 'roster-ok'}>
+                    needs: {ts.remainingPlayersNeeded} ({ts.count}/{maxPlayersPerTeam})
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Round Complete Message */}
@@ -291,11 +337,17 @@ export default function AuctionWheel({
                             </option>
                           ))}
                         </select>
-                        {selectedTeam && selectedTeam.logo_url && (
-                          <div className="team-select-logo">
-                            <img src={selectedTeam.logo_url} alt={selectedTeam.name} />
-                          </div>
-                        )}
+                        {(() => {
+                          const selectedTeamObj = teams.find(t => t.name === soldTo);
+                          if (selectedTeamObj && selectedTeamObj.logo_url) {
+                            return (
+                              <div className="team-select-logo">
+                                <img src={selectedTeamObj.logo_url} alt={selectedTeamObj.name} />
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     ) : (
                       <input

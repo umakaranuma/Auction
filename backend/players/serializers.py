@@ -62,7 +62,8 @@ class TournamentSerializer(serializers.ModelSerializer):
         model = Tournament
         fields = [
             'id', 'name', 'year', 'club_name',
-            'club_logo', 'club_logo_url', 'player_count', 'team_count', 'created_at',
+            'club_logo', 'club_logo_url', 'team_total_budget', 'max_players_per_team',
+            'player_count', 'team_count', 'created_at',
         ]
         extra_kwargs = {
             'club_logo': {'write_only': True, 'required': False},

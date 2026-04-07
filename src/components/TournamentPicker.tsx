@@ -8,6 +8,8 @@ interface TournamentFromAPI {
   year: string;
   club_name: string;
   club_logo_url: string | null;
+  team_total_budget: number;
+  max_players_per_team: number;
   player_count: number;
   created_at: string;
 }

@@ -4,6 +4,8 @@ export interface TournamentInfo {
   clubLogoSrc: string | null;
   clubLogoFile: File | null;
   clubName: string;
+  teamTotalBudget: number;
+  maxPlayersPerTeam: number;
 }
 
 export interface PlayerCardState extends TournamentInfo {

@@ -6,6 +6,8 @@ class Tournament(models.Model):
     year = models.CharField(max_length=50, blank=True, default='')
     club_name = models.CharField(max_length=200, blank=True, default='')
     club_logo = models.ImageField(upload_to='logos/', blank=True, null=True)
+    team_total_budget = models.IntegerField(default=1000)
+    max_players_per_team = models.IntegerField(default=15)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

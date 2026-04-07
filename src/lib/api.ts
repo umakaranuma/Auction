@@ -7,11 +7,19 @@ export async function createTournament(data: {
   year: string;
   club_name: string;
   club_logo?: File | null;
+  team_total_budget?: number;
+  max_players_per_team?: number;
 }) {
   const formData = new FormData();
   formData.append('name', data.name);
   formData.append('year', data.year);
   formData.append('club_name', data.club_name);
+  if (data.team_total_budget !== undefined) {
+    formData.append('team_total_budget', String(data.team_total_budget));
+  }
+  if (data.max_players_per_team !== undefined) {
+    formData.append('max_players_per_team', String(data.max_players_per_team));
+  }
   if (data.club_logo) {
     formData.append('club_logo', data.club_logo);
   }
@@ -29,11 +37,19 @@ export async function updateTournament(id: number, data: {
   year: string;
   club_name: string;
   club_logo?: File | null;
+  team_total_budget?: number;
+  max_players_per_team?: number;
 }) {
   const formData = new FormData();
   formData.append('name', data.name);
   formData.append('year', data.year);
   formData.append('club_name', data.club_name);
+  if (data.team_total_budget !== undefined) {
+    formData.append('team_total_budget', String(data.team_total_budget));
+  }
+  if (data.max_players_per_team !== undefined) {
+    formData.append('max_players_per_team', String(data.max_players_per_team));
+  }
   if (data.club_logo) {
     formData.append('club_logo', data.club_logo);
   }

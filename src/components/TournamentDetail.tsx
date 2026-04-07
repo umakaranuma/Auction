@@ -39,6 +39,8 @@ interface TournamentDetailProps {
   tournamentYear: string;
   clubName: string;
   clubLogoSrc: string | null;
+  teamTotalBudget: number;
+  maxPlayersPerTeam: number;
   onBack: () => void;
   onEdit?: () => void;
 }
@@ -63,6 +65,8 @@ export default function TournamentDetail({
   tournamentYear,
   clubName,
   clubLogoSrc,
+  teamTotalBudget,
+  maxPlayersPerTeam,
   onBack,
   onEdit,
 }: TournamentDetailProps) {
@@ -105,6 +109,8 @@ export default function TournamentDetail({
     clubLogoSrc,
     clubLogoFile: null,
     clubName,
+    teamTotalBudget,
+    maxPlayersPerTeam,
   };
 
   const [state, setState] = useState<PlayerCardState>({
@@ -368,6 +374,8 @@ export default function TournamentDetail({
         bowlingHand: viewerPlayer.bowling_hand,
         bowlingStyle: '',
         roles: viewerPlayer.role ? [viewerPlayer.role] : [],
+        teamTotalBudget,
+        maxPlayersPerTeam,
       }
     : null;
 
@@ -734,6 +742,8 @@ export default function TournamentDetail({
           clubName={clubName}
           players={players}
           teams={teams}
+          teamTotalBudget={teamTotalBudget}
+          maxPlayersPerTeam={maxPlayersPerTeam}
           onUpdateStatus={handleUpdateStatus}
           onResetAuction={handleResetAuction}
           onRefreshPlayers={fetchPlayers}

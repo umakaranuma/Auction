@@ -51,6 +51,16 @@ export default function TournamentSetup({ tournament, setTournament, onContinue,
             <label>Club / Team Name</label>
             <input type="text" name="clubName" value={tournament.clubName} placeholder="e.g. Uduppiddy Youth" onChange={handleInput} />
           </div>
+          <div className="setup-row" style={{ display: 'flex', gap: '1rem' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Team Total Budget</label>
+              <input type="number" name="teamTotalBudget" value={tournament.teamTotalBudget} placeholder="e.g. 1000" onChange={handleInput} />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Max Players per Team</label>
+              <input type="number" name="maxPlayersPerTeam" value={tournament.maxPlayersPerTeam} placeholder="e.g. 15" onChange={handleInput} />
+            </div>
+          </div>
           <div className="form-group">
             <label>Club / Team Logo</label>
             <div className="setup-logo-area">

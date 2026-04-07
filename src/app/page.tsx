@@ -15,6 +15,8 @@ interface SelectedTournament {
   year: string;
   club_name: string;
   club_logo_url: string | null;
+  team_total_budget?: number;
+  max_players_per_team?: number;
 }
 
 export default function Home() {
@@ -27,6 +29,8 @@ export default function Home() {
     clubLogoSrc: null,
     clubLogoFile: null,
     clubName: '',
+    teamTotalBudget: 1000,
+    maxPlayersPerTeam: 15,
   });
 
   const [saving, setSaving] = useState(false);
@@ -38,6 +42,8 @@ export default function Home() {
     year: string;
     club_name: string;
     club_logo_url: string | null;
+    team_total_budget: number;
+    max_players_per_team: number;
   }) => {
     setSelectedTournament(t);
     setTournament({
@@ -46,6 +52,8 @@ export default function Home() {
       clubLogoSrc: t.club_logo_url,
       clubLogoFile: null,
       clubName: t.club_name,
+      teamTotalBudget: t.team_total_budget,
+      maxPlayersPerTeam: t.max_players_per_team,
     });
     setView('detail');
   };
@@ -58,6 +66,8 @@ export default function Home() {
       clubLogoSrc: null,
       clubLogoFile: null,
       clubName: '',
+      teamTotalBudget: 1000,
+      maxPlayersPerTeam: 15,
     });
     setSelectedTournament(null);
     setView('setup');
@@ -71,6 +81,8 @@ export default function Home() {
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo: tournament.clubLogoFile,
+        team_total_budget: tournament.teamTotalBudget,
+        max_players_per_team: tournament.maxPlayersPerTeam,
       });
       setSelectedTournament({
         id: result.id,
@@ -78,6 +90,8 @@ export default function Home() {
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
+        team_total_budget: result.team_total_budget,
+        max_players_per_team: result.max_players_per_team,
       });
       setView('detail');
     } catch (error) {
@@ -102,6 +116,8 @@ export default function Home() {
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo: tournament.clubLogoFile,
+        team_total_budget: tournament.teamTotalBudget,
+        max_players_per_team: tournament.maxPlayersPerTeam,
       });
       setSelectedTournament({
         ...selectedTournament,
@@ -109,6 +125,8 @@ export default function Home() {
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
+        team_total_budget: result.team_total_budget,
+        max_players_per_team: result.max_players_per_team,
       });
       setView('detail');
     } catch (error) {
@@ -187,6 +205,8 @@ export default function Home() {
           tournamentYear={selectedTournament.year}
           clubName={selectedTournament.club_name}
           clubLogoSrc={selectedTournament.club_logo_url}
+          teamTotalBudget={selectedTournament.team_total_budget || 1000}
+          maxPlayersPerTeam={selectedTournament.max_players_per_team || 15}
           onBack={handleBackToPicker}
           onEdit={handleEditTournament}
         />
