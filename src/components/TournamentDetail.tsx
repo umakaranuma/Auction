@@ -210,6 +210,27 @@ export default function TournamentDetail({
     }
   };
 
+  // Revert player to pending
+  const handleRevertToPending = async (e: React.MouseEvent, playerId: number) => {
+    e.stopPropagation(); // Don't open the viewer
+    try {
+      await updatePlayerAuctionStatus(playerId, {
+        auction_status: 'pending',
+        sold_price: null,
+        sold_to: '',
+      });
+      setPlayers((prev) =>
+        prev.map((p) =>
+          p.id === playerId
+            ? { ...p, auction_status: 'pending' as const, sold_price: null, sold_to: '' }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error('Failed to revert player:', err);
+    }
+  };
+
   // Auction status update
   const handleUpdateStatus = async (
     playerId: number,
@@ -463,6 +484,15 @@ export default function TournamentDetail({
                       <div className="status-badge status-pending">⏳ PENDING</div>
                     )}
                   </div>
+                  {p.auction_status !== 'pending' && (
+                    <button
+                      className="player-revert-btn"
+                      onClick={(e) => handleRevertToPending(e, p.id)}
+                      title="Revert to Pending"
+                    >
+                      ↩️
+                    </button>
+                  )}
                   <div className="player-list-view-icon">👁</div>
                 </div>
               ))}

@@ -1597,6 +1597,29 @@ input[type="file"] { display: none; }
 .player-list-status {
   flex-shrink: 0;
 }
+
+/* Revert to Pending Button */
+.player-revert-btn {
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+.player-list-clickable:hover .player-revert-btn {
+  opacity: 1;
+}
+.player-revert-btn:hover {
+  background: rgba(251,191,36,0.18);
+  border-color: #fbbf24;
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(251,191,36,0.2);
+}
 .status-badge {
   padding: 4px 12px;
   border-radius: 6px;
@@ -2389,4 +2412,5 @@ input[type="file"] { display: none; }
   .teams-grid { grid-template-columns: 1fr; }
   .team-create-form { flex-direction: column; align-items: center; }
   .team-delete-btn { opacity: 1; }
+  .player-revert-btn { opacity: 1; }
 }
