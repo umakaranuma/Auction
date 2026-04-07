@@ -75,6 +75,7 @@ export default function TournamentDetail({
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showCard, setShowCard] = useState(false);
   const [playerFilter, setPlayerFilter] = useState<'all' | 'pending' | 'sold' | 'unsold'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Team creation state
   const [newTeamName, setNewTeamName] = useState('');
@@ -290,10 +291,12 @@ export default function TournamentDetail({
   const pendingCount = players.filter((p) => p.auction_status === 'pending').length;
 
   // Filtered players
-  const filteredPlayers =
-    playerFilter === 'all'
-      ? players
-      : players.filter((p) => p.auction_status === playerFilter);
+  const filteredPlayers = players.filter((p) => {
+    const matchesFilter = playerFilter === 'all' || p.auction_status === playerFilter;
+    const matchesSearch = searchQuery.trim() === '' ||
+      p.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
   // Build card state for the viewer
   const viewerPlayer = viewerIndex !== null ? filteredPlayers[viewerIndex] : null;
@@ -426,6 +429,26 @@ export default function TournamentDetail({
               <span className="auction-stat-num">{unsoldCount}</span>
               <span className="auction-stat-label">Unsold</span>
             </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="player-search-bar">
+            <span className="player-search-icon">🔍</span>
+            <input
+              type="text"
+              className="player-search-input"
+              placeholder="Search players by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                className="player-search-clear"
+                onClick={() => setSearchQuery('')}
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           {/* Filter Tabs */}
