@@ -2520,25 +2520,49 @@ input[type="file"] { display: none; }
   margin-top: 2px;
 }
 
+.team-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.team-card:hover .team-card-actions {
+  opacity: 1;
+}
+
+.team-edit-btn,
 .team-delete-btn {
-  background: rgba(239,68,68,0.06);
-  border: 1px solid rgba(239,68,68,0.15);
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
   transition: all 0.2s;
-  flex-shrink: 0;
-  opacity: 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
 }
-.team-card:hover .team-delete-btn {
-  opacity: 1;
+
+.team-edit-btn:hover {
+  background: rgba(14,165,233,0.15); /* light blue for edit */
+  border-color: #0ea5e9;
+  transform: scale(1.1);
+}
+
+.team-delete-btn {
+  background: rgba(239,68,68,0.06);
+  border-color: rgba(239,68,68,0.15);
 }
 .team-delete-btn:hover {
   background: rgba(239,68,68,0.15);
   border-color: #ef4444;
   transform: scale(1.1);
+}
+
+/* Edit Team Modal Tweaks */
+.edit-team-modal .form-group input {
+  font-size: 1rem;
+  padding: 10px 14px;
 }
 
 /* Team Select in Auction */

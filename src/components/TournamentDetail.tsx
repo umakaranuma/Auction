@@ -5,7 +5,7 @@ import PreviewPanel from './PreviewPanel';
 import AuctionWheel from './AuctionWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
-import { getPlayers, createPlayer, updatePlayerAuctionStatus, resetAuction, getTeams, createTeam, deleteTeam } from '../lib/api';
+import { getPlayers, createPlayer, updatePlayerAuctionStatus, resetAuction, getTeams, createTeam, updateTeam, deleteTeam } from '../lib/api';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -84,6 +84,14 @@ export default function TournamentDetail({
   const [teamSaving, setTeamSaving] = useState(false);
   const [teamMessage, setTeamMessage] = useState<string | null>(null);
   const teamLogoRef = useRef<HTMLInputElement>(null);
+
+  // Team edit modal state
+  const [editTeamId, setEditTeamId] = useState<number | null>(null);
+  const [editTeamName, setEditTeamName] = useState('');
+  const [editTeamLogo, setEditTeamLogo] = useState<File | null>(null);
+  const [editTeamLogoPreview, setEditTeamLogoPreview] = useState<string | null>(null);
+  const [editTeamSaving, setEditTeamSaving] = useState(false);
+  const editTeamLogoRef = useRef<HTMLInputElement>(null);
 
   // Revert confirmation modal
   const [revertPlayer, setRevertPlayer] = useState<PlayerFromAPI | null>(null);
@@ -212,6 +220,48 @@ export default function TournamentDetail({
       reader.onload = (ev) => setNewTeamLogoPreview(ev.target?.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleEditTeamClick = (team: TeamFromAPI) => {
+    setEditTeamId(team.id);
+    setEditTeamName(team.name);
+    setEditTeamLogo(null);
+    setEditTeamLogoPreview(team.logo_url);
+  };
+
+  const handleEditTeamLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditTeamLogo(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setEditTeamLogoPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateTeam = async () => {
+    if (!editTeamId || !editTeamName.trim() || editTeamSaving) return;
+    setEditTeamSaving(true);
+    try {
+      await updateTeam(editTeamId, {
+        name: editTeamName.trim(),
+        logo: editTeamLogo,
+      });
+      fetchTeams();
+      setEditTeamId(null);
+    } catch (err) {
+      console.error('Failed to update team:', err);
+      alert('Failed to update team');
+    } finally {
+      setEditTeamSaving(false);
+    }
+  };
+
+  const cancelEditTeam = () => {
+    setEditTeamId(null);
+    setEditTeamName('');
+    setEditTeamLogo(null);
+    setEditTeamLogoPreview(null);
   };
 
   // Revert player to pending
@@ -633,13 +683,22 @@ export default function TournamentDetail({
                           : 'No players yet'}
                       </div>
                     </div>
-                    <button
-                      className="team-delete-btn"
-                      onClick={() => handleDeleteTeam(team.id, team.name)}
-                      title="Delete Team"
-                    >
-                      🗑️
-                    </button>
+                    <div className="team-card-actions">
+                      <button
+                        className="team-edit-btn"
+                        onClick={() => handleEditTeamClick(team)}
+                        title="Edit Team"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="team-delete-btn"
+                        onClick={() => handleDeleteTeam(team.id, team.name)}
+                        title="Delete Team"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -769,6 +828,63 @@ export default function TournamentDetail({
               <button className="confirm-ok-btn" onClick={handleRevertConfirm}>
                 Yes, Revert
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Edit Team Modal ── */}
+      {editTeamId !== null && (
+        <div className="confirm-overlay" onClick={cancelEditTeam}>
+          <div className="team-create-card edit-team-modal" onClick={(e) => e.stopPropagation()} style={{ margin: 0, width: '90%', maxWidth: '400px' }}>
+            <h3 className="team-create-title">✏️ Edit Team</h3>
+            <div className="team-create-form" style={{ flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+              <div className="team-create-logo-area">
+                <input
+                  type="file"
+                  ref={editTeamLogoRef}
+                  accept="image/*"
+                  onChange={handleEditTeamLogoChange}
+                  style={{ display: 'none' }}
+                />
+                <div
+                  className="team-logo-upload"
+                  onClick={() => editTeamLogoRef.current?.click()}
+                  style={{ width: '90px', height: '90px' }}
+                >
+                  {editTeamLogoPreview ? (
+                    <img src={editTeamLogoPreview} alt="Team Logo" />
+                  ) : (
+                    <div className="team-logo-placeholder">
+                      <span>🏏</span>
+                      <span className="team-logo-text">Logo</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="team-create-fields" style={{ width: '100%' }}>
+                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                  <label>Team Name</label>
+                  <input
+                    type="text"
+                    value={editTeamName}
+                    onChange={(e) => setEditTeamName(e.target.value)}
+                    placeholder="e.g. Chennai Super Kings"
+                    style={{ textAlign: 'center' }}
+                  />
+                </div>
+                <div className="confirm-actions" style={{ margin: 0 }}>
+                  <button className="confirm-cancel-btn" onClick={cancelEditTeam}>
+                    Cancel
+                  </button>
+                  <button
+                    className="confirm-ok-btn"
+                    onClick={handleUpdateTeam}
+                    disabled={editTeamSaving || !editTeamName.trim()}
+                  >
+                    {editTeamSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
