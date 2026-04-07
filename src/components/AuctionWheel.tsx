@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import SpinWheel from './SpinWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState } from '../types';
@@ -20,6 +20,14 @@ interface PlayerFromAPI {
   sold_to: string;
 }
 
+interface TeamFromAPI {
+  id: number;
+  tournament: number;
+  name: string;
+  logo_url: string | null;
+  created_at: string;
+}
+
 interface AuctionWheelProps {
   tournamentId: number | null;
   tournamentName: string;
@@ -27,6 +35,7 @@ interface AuctionWheelProps {
   clubLogoSrc: string | null;
   clubName: string;
   players: PlayerFromAPI[];
+  teams: TeamFromAPI[];
   onUpdateStatus: (
     playerId: number,
     status: 'sold' | 'unsold',
@@ -37,6 +46,8 @@ interface AuctionWheelProps {
   onRefreshPlayers: () => Promise<void>;
 }
 
+type AuctionView = 'wheel' | 'result';
+
 export default function AuctionWheel({
   tournamentId,
   tournamentName,
@@ -44,13 +55,14 @@ export default function AuctionWheel({
   clubLogoSrc,
   clubName,
   players,
+  teams,
   onUpdateStatus,
   onResetAuction,
   onRefreshPlayers,
 }: AuctionWheelProps) {
   const [spinning, setSpinning] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerFromAPI | null>(null);
-  const [showCard, setShowCard] = useState(false);
+  const [auctionView, setAuctionView] = useState<AuctionView>('wheel');
   const [auctionRound, setAuctionRound] = useState<1 | 2>(1);
   const [soldPrice, setSoldPrice] = useState('');
   const [soldTo, setSoldTo] = useState('');
@@ -67,9 +79,7 @@ export default function AuctionWheel({
 
   // Check if round 1 is complete (no pending players left)
   const round1Complete = round1Players.length === 0 && players.length > 0;
-  // Check if round 2 is complete
   const round2Complete = round2Players.length === 0 && round1Complete;
-  // All done
   const auctionComplete = round1Complete && round2Complete;
 
   // Auto-detect round
@@ -83,7 +93,6 @@ export default function AuctionWheel({
 
   const handleSpin = () => {
     if (spinning || eligiblePlayers.length === 0) return;
-    setShowCard(false);
     setSelectedPlayer(null);
     setSoldPrice('');
     setSoldTo('');
@@ -100,7 +109,8 @@ export default function AuctionWheel({
 
   const handleSpinEnd = useCallback(() => {
     setSpinning(false);
-    setShowCard(true);
+    // Switch to result view — hide wheel, show card
+    setAuctionView('result');
   }, []);
 
   const handleMarkSold = async () => {
@@ -113,7 +123,7 @@ export default function AuctionWheel({
       soldTo || undefined
     );
     setSelectedPlayer(null);
-    setShowCard(false);
+    setAuctionView('wheel');
     setStatusUpdating(false);
   };
 
@@ -122,22 +132,27 @@ export default function AuctionWheel({
     setStatusUpdating(true);
     await onUpdateStatus(selectedPlayer.id, 'unsold');
     setSelectedPlayer(null);
-    setShowCard(false);
+    setAuctionView('wheel');
     setStatusUpdating(false);
+  };
+
+  const handleBackToWheel = () => {
+    setSelectedPlayer(null);
+    setAuctionView('wheel');
   };
 
   const handleStartRound2 = () => {
     setAuctionRound(2);
     setRoundCompleteMsg(null);
     setSelectedPlayer(null);
-    setShowCard(false);
+    setAuctionView('wheel');
   };
 
   const handleReset = async () => {
     await onResetAuction();
     setAuctionRound(1);
     setSelectedPlayer(null);
-    setShowCard(false);
+    setAuctionView('wheel');
     setRoundCompleteMsg(null);
   };
 
@@ -162,6 +177,9 @@ export default function AuctionWheel({
         roles: selectedPlayer.role ? [selectedPlayer.role] : [],
       }
     : null;
+
+  // Find the selected team for showing logo
+  const selectedTeam = teams.find((t) => t.name === soldTo);
 
   if (players.length === 0) {
     return (
@@ -222,80 +240,104 @@ export default function AuctionWheel({
         </div>
       )}
 
-      {/* Main Content */}
+      {/* ══ MAIN STAGE ══ */}
       {!auctionComplete && eligiblePlayers.length > 0 && (
-        <div className="auction-content">
-          {/* Left: Wheel */}
-          <div className="auction-wheel-section">
-            <SpinWheel
-              names={eligiblePlayers.map((p) => p.name)}
-              onResult={handleResult}
-              spinning={spinning}
-              onSpinEnd={handleSpinEnd}
-            />
-            <button className="spin-btn" onClick={handleSpin} disabled={spinning}>
-              {spinning ? '🌀 SPINNING...' : '🎯 SPIN THE WHEEL'}
-            </button>
-            <div className="player-count-badge">
-              {eligiblePlayers.length} player{eligiblePlayers.length !== 1 ? 's' : ''} remaining
-              {auctionRound === 2 && ' (Round 2)'}
+        <div className="auction-stage">
+          {/* ─── WHEEL VIEW ─── */}
+          {auctionView === 'wheel' && (
+            <div className="auction-wheel-center">
+              <div className="wheel-glow-bg" />
+              <SpinWheel
+                names={eligiblePlayers.map((p) => p.name)}
+                onResult={handleResult}
+                spinning={spinning}
+                onSpinEnd={handleSpinEnd}
+              />
+              <button className="spin-btn" onClick={handleSpin} disabled={spinning}>
+                {spinning ? '🌀 SPINNING...' : '🎯 SPIN THE WHEEL'}
+              </button>
+              <div className="player-count-badge">
+                {eligiblePlayers.length} player{eligiblePlayers.length !== 1 ? 's' : ''} remaining
+                {auctionRound === 2 && ' (Round 2)'}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Right: Result Card + Actions */}
-          <div className="auction-result-section">
-            {showCard && cardState && selectedPlayer ? (
-              <div className="auction-result-appear">
-                <div className="auction-result-label">🏆 SELECTED PLAYER</div>
+          {/* ─── RESULT VIEW (Player Card) ─── */}
+          {auctionView === 'result' && cardState && selectedPlayer && (
+            <div className="auction-result-fullscreen">
+              <div className="auction-result-glow" />
+              <div className="auction-result-label">🏆 SELECTED PLAYER</div>
+              <div className="auction-result-card-wrap">
                 <PlayerCard state={cardState} />
+              </div>
 
-                {/* Sold/Unsold Actions */}
-                <div className="auction-actions">
-                  <div className="auction-action-row">
-                    <div className="form-group auction-input-group">
-                      <label>Sold To (Team)</label>
+              {/* Sold/Unsold Actions */}
+              <div className="auction-actions">
+                <div className="auction-action-row">
+                  <div className="form-group auction-input-group">
+                    <label>Sold To (Team)</label>
+                    {teams.length > 0 ? (
+                      <div className="team-select-wrapper">
+                        <select
+                          value={soldTo}
+                          onChange={(e) => setSoldTo(e.target.value)}
+                          className="team-select"
+                        >
+                          <option value="">— Select Team —</option>
+                          {teams.map((t) => (
+                            <option key={t.id} value={t.name}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedTeam && selectedTeam.logo_url && (
+                          <div className="team-select-logo">
+                            <img src={selectedTeam.logo_url} alt={selectedTeam.name} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
                       <input
                         type="text"
                         value={soldTo}
                         onChange={(e) => setSoldTo(e.target.value)}
                         placeholder="e.g. Chennai Kings"
                       />
-                    </div>
-                    <div className="form-group auction-input-group">
-                      <label>Price (₹)</label>
-                      <input
-                        type="number"
-                        value={soldPrice}
-                        onChange={(e) => setSoldPrice(e.target.value)}
-                        placeholder="e.g. 50000"
-                      />
-                    </div>
+                    )}
                   </div>
-                  <div className="auction-action-buttons">
-                    <button
-                      className="auction-sold-btn"
-                      onClick={handleMarkSold}
-                      disabled={statusUpdating}
-                    >
-                      {statusUpdating ? '⏳' : '✅'} MARK AS SOLD
-                    </button>
-                    <button
-                      className="auction-unsold-btn"
-                      onClick={handleMarkUnsold}
-                      disabled={statusUpdating}
-                    >
-                      {statusUpdating ? '⏳' : '❌'} MARK AS UNSOLD
-                    </button>
+                  <div className="form-group auction-input-group">
+                    <label>Price (₹)</label>
+                    <input
+                      type="number"
+                      value={soldPrice}
+                      onChange={(e) => setSoldPrice(e.target.value)}
+                      placeholder="e.g. 50000"
+                    />
                   </div>
                 </div>
+                <div className="auction-action-buttons">
+                  <button
+                    className="auction-sold-btn"
+                    onClick={handleMarkSold}
+                    disabled={statusUpdating}
+                  >
+                    {statusUpdating ? '⏳' : '✅'} MARK AS SOLD
+                  </button>
+                  <button
+                    className="auction-unsold-btn"
+                    onClick={handleMarkUnsold}
+                    disabled={statusUpdating}
+                  >
+                    {statusUpdating ? '⏳' : '❌'} MARK AS UNSOLD
+                  </button>
+                </div>
+                <button className="auction-back-to-wheel-btn" onClick={handleBackToWheel}>
+                  ← Back to Wheel
+                </button>
               </div>
-            ) : (
-              <div className="auction-placeholder">
-                <div className="auction-placeholder-icon">🎡</div>
-                <p>Spin the wheel to<br />reveal a player!</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

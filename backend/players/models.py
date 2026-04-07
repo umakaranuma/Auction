@@ -15,6 +15,22 @@ class Tournament(models.Model):
         db_table = 'tournaments'
 
 
+class Team(models.Model):
+    tournament = models.ForeignKey(
+        Tournament, on_delete=models.CASCADE, related_name='teams'
+    )
+    name = models.CharField(max_length=200)
+    logo = models.ImageField(upload_to='team_logos/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.tournament.name})"
+
+    class Meta:
+        db_table = 'teams'
+        ordering = ['name']
+
+
 class Player(models.Model):
     BATTING_CHOICES = [
         ('Right Hand', 'Right Hand'),

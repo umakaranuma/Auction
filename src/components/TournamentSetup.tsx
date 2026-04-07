@@ -7,9 +7,10 @@ interface TournamentSetupProps {
   setTournament: React.Dispatch<React.SetStateAction<TournamentInfo>>;
   onContinue: () => void;
   saving?: boolean;
+  isEdit?: boolean;
 }
 
-export default function TournamentSetup({ tournament, setTournament, onContinue, saving }: TournamentSetupProps) {
+export default function TournamentSetup({ tournament, setTournament, onContinue, saving, isEdit }: TournamentSetupProps) {
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTournament(prev => ({ ...prev, [name]: value }));
@@ -32,8 +33,10 @@ export default function TournamentSetup({ tournament, setTournament, onContinue,
     <div className="setup-screen">
       <div className="setup-card">
         <div className="setup-icon">🏏</div>
-        <h2 className="setup-title">TOURNAMENT SETUP</h2>
-        <p className="setup-subtitle">Configure your tournament details once, then create cards for all your players</p>
+        <h2 className="setup-title">{isEdit ? 'EDIT TOURNAMENT' : 'TOURNAMENT SETUP'}</h2>
+        <p className="setup-subtitle">
+          {isEdit ? 'Update your tournament details below' : 'Configure your tournament details once, then create cards for all your players'}
+        </p>
 
         <div className="setup-form">
           <div className="form-group">
@@ -66,7 +69,7 @@ export default function TournamentSetup({ tournament, setTournament, onContinue,
           </div>
 
           <button className="gen-btn" onClick={onContinue} disabled={!canContinue || saving} style={{ opacity: canContinue && !saving ? 1 : 0.5 }}>
-            {saving ? '⏳ SAVING...' : '🎯 CONTINUE TO PLAYER CARDS'}
+            {saving ? '⏳ SAVING...' : (isEdit ? '💾 SAVE CHANGES' : '🎯 CONTINUE TO PLAYER CARDS')}
           </button>
         </div>
       </div>

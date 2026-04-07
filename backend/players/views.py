@@ -2,10 +2,11 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from .models import Tournament, Player
+from .models import Tournament, Team, Player
 from .serializers import (
     TournamentSerializer,
     TournamentDetailSerializer,
+    TeamSerializer,
     PlayerSerializer,
     PlayerAuctionStatusSerializer,
 )
@@ -28,6 +29,19 @@ class TournamentViewSet(viewsets.ModelViewSet):
             auction_status='pending', sold_price=None, sold_to=''
         )
         return Response({'status': 'auction reset'})
+
+
+class TeamViewSet(viewsets.ModelViewSet):
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        tournament_id = self.request.query_params.get('tournament')
+        if tournament_id:
+            qs = qs.filter(tournament_id=tournament_id)
+        return qs
 
 
 class PlayerViewSet(viewsets.ModelViewSet):

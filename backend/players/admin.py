@@ -1,11 +1,18 @@
 from django.contrib import admin
-from .models import Tournament, Player
+from .models import Tournament, Team, Player
 
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
     list_display = ['name', 'year', 'club_name', 'created_at']
     search_fields = ['name', 'club_name']
+
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ['name', 'tournament', 'created_at']
+    list_filter = ['tournament']
+    search_fields = ['name']
 
 
 @admin.register(Player)

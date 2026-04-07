@@ -24,6 +24,28 @@ export async function createTournament(data: {
   return res.json();
 }
 
+export async function updateTournament(id: number, data: {
+  name: string;
+  year: string;
+  club_name: string;
+  club_logo?: File | null;
+}) {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('year', data.year);
+  formData.append('club_name', data.club_name);
+  if (data.club_logo) {
+    formData.append('club_logo', data.club_logo);
+  }
+
+  const res = await fetch(`${API_BASE}/tournaments/${id}/`, {
+    method: 'PATCH',
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to update tournament');
+  return res.json();
+}
+
 export async function getTournaments() {
   const res = await fetch(`${API_BASE}/tournaments/`);
   if (!res.ok) throw new Error('Failed to fetch tournaments');
@@ -43,6 +65,60 @@ export async function resetAuction(tournamentId: number) {
   });
   if (!res.ok) throw new Error('Failed to reset auction');
   return res.json();
+}
+
+// ── Team API ───────────────────────────────
+
+export async function getTeams(tournamentId: number) {
+  const res = await fetch(`${API_BASE}/teams/?tournament=${tournamentId}`);
+  if (!res.ok) throw new Error('Failed to fetch teams');
+  return res.json();
+}
+
+export async function createTeam(data: {
+  tournament: number;
+  name: string;
+  logo?: File | null;
+}) {
+  const formData = new FormData();
+  formData.append('tournament', String(data.tournament));
+  formData.append('name', data.name);
+  if (data.logo) {
+    formData.append('logo', data.logo);
+  }
+
+  const res = await fetch(`${API_BASE}/teams/`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
+export async function updateTeam(id: number, data: {
+  name?: string;
+  logo?: File | null;
+}) {
+  const formData = new FormData();
+  if (data.name !== undefined) formData.append('name', data.name);
+  if (data.logo) formData.append('logo', data.logo);
+
+  const res = await fetch(`${API_BASE}/teams/${id}/`, {
+    method: 'PATCH',
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to update team');
+  return res.json();
+}
+
+export async function deleteTeam(id: number) {
+  const res = await fetch(`${API_BASE}/teams/${id}/`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete team');
 }
 
 // ── Player API ─────────────────────────────

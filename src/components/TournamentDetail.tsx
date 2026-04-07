@@ -1,12 +1,13 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FormPanel from './FormPanel';
 import PreviewPanel from './PreviewPanel';
 import AuctionWheel from './AuctionWheel';
+import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
-import { getPlayers, createPlayer, updatePlayerAuctionStatus, resetAuction } from '../lib/api';
+import { getPlayers, createPlayer, updatePlayerAuctionStatus, resetAuction, getTeams, createTeam, deleteTeam } from '../lib/api';
 
-type DetailTab = 'players' | 'create' | 'auction';
+type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
 interface PlayerFromAPI {
   id: number;
@@ -24,6 +25,14 @@ interface PlayerFromAPI {
   sold_to: string;
 }
 
+interface TeamFromAPI {
+  id: number;
+  tournament: number;
+  name: string;
+  logo_url: string | null;
+  created_at: string;
+}
+
 interface TournamentDetailProps {
   tournamentId: number;
   tournamentName: string;
@@ -31,6 +40,7 @@ interface TournamentDetailProps {
   clubName: string;
   clubLogoSrc: string | null;
   onBack: () => void;
+  onEdit?: () => void;
 }
 
 const defaultPlayerFields = {
@@ -54,14 +64,28 @@ export default function TournamentDetail({
   clubName,
   clubLogoSrc,
   onBack,
+  onEdit,
 }: TournamentDetailProps) {
   const [tab, setTab] = useState<DetailTab>('players');
   const [players, setPlayers] = useState<PlayerFromAPI[]>([]);
+  const [teams, setTeams] = useState<TeamFromAPI[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teamsLoading, setTeamsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showCard, setShowCard] = useState(false);
   const [playerFilter, setPlayerFilter] = useState<'all' | 'pending' | 'sold' | 'unsold'>('all');
+
+  // Team creation state
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamLogo, setNewTeamLogo] = useState<File | null>(null);
+  const [newTeamLogoPreview, setNewTeamLogoPreview] = useState<string | null>(null);
+  const [teamSaving, setTeamSaving] = useState(false);
+  const [teamMessage, setTeamMessage] = useState<string | null>(null);
+  const teamLogoRef = useRef<HTMLInputElement>(null);
+
+  // Player card viewer modal
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const tournament: TournamentInfo = {
     tournamentName,
@@ -88,9 +112,22 @@ export default function TournamentDetail({
     }
   }, [tournamentId]);
 
+  // Fetch teams
+  const fetchTeams = useCallback(async () => {
+    try {
+      const data = await getTeams(tournamentId);
+      setTeams(data);
+    } catch (err) {
+      console.error('Failed to fetch teams:', err);
+    } finally {
+      setTeamsLoading(false);
+    }
+  }, [tournamentId]);
+
   useEffect(() => {
     fetchPlayers();
-  }, [fetchPlayers]);
+    fetchTeams();
+  }, [fetchPlayers, fetchTeams]);
 
   // Player creation
   const handleGenerate = async () => {
@@ -126,6 +163,51 @@ export default function TournamentDetail({
     setState({ ...tournament, ...defaultPlayerFields });
     setShowCard(false);
     setSaveMessage(null);
+  };
+
+  // Team creation
+  const handleCreateTeam = async () => {
+    if (!newTeamName.trim() || teamSaving) return;
+    setTeamSaving(true);
+    setTeamMessage(null);
+    try {
+      await createTeam({
+        tournament: tournamentId,
+        name: newTeamName.trim(),
+        logo: newTeamLogo,
+      });
+      setNewTeamName('');
+      setNewTeamLogo(null);
+      setNewTeamLogoPreview(null);
+      setTeamMessage('✅ Team created successfully!');
+      fetchTeams();
+      setTimeout(() => setTeamMessage(null), 3000);
+    } catch (err) {
+      console.error('Failed to create team:', err);
+      setTeamMessage('⚠️ Failed to create team');
+    } finally {
+      setTeamSaving(false);
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: number, teamName: string) => {
+    if (!confirm(`Delete team "${teamName}"? This cannot be undone.`)) return;
+    try {
+      await deleteTeam(teamId);
+      fetchTeams();
+    } catch (err) {
+      console.error('Failed to delete team:', err);
+    }
+  };
+
+  const handleTeamLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewTeamLogo(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setNewTeamLogoPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   // Auction status update
@@ -178,6 +260,56 @@ export default function TournamentDetail({
       ? players
       : players.filter((p) => p.auction_status === playerFilter);
 
+  // Build card state for the viewer
+  const viewerPlayer = viewerIndex !== null ? filteredPlayers[viewerIndex] : null;
+  const viewerCardState: PlayerCardState | null = viewerPlayer
+    ? {
+        tournamentName,
+        tournamentYear,
+        clubLogoSrc,
+        clubLogoFile: null,
+        clubName,
+        playerPhotoSrc: viewerPlayer.photo_url,
+        playerPhotoFile: null,
+        playerName: viewerPlayer.name,
+        jerseyNumber: viewerPlayer.jersey_number,
+        playerAge: viewerPlayer.age,
+        playerPhone: viewerPlayer.phone,
+        playerNationality: viewerPlayer.nationality,
+        battingHand: viewerPlayer.batting_hand,
+        bowlingHand: viewerPlayer.bowling_hand,
+        bowlingStyle: '',
+        roles: viewerPlayer.role ? [viewerPlayer.role] : [],
+      }
+    : null;
+
+  const handleOpenViewer = (index: number) => {
+    setViewerIndex(index);
+  };
+  const handleCloseViewer = () => {
+    setViewerIndex(null);
+  };
+  const handlePrevPlayer = () => {
+    if (viewerIndex === null) return;
+    setViewerIndex(viewerIndex <= 0 ? filteredPlayers.length - 1 : viewerIndex - 1);
+  };
+  const handleNextPlayer = () => {
+    if (viewerIndex === null) return;
+    setViewerIndex(viewerIndex >= filteredPlayers.length - 1 ? 0 : viewerIndex + 1);
+  };
+
+  // Keyboard navigation for the viewer
+  useEffect(() => {
+    if (viewerIndex === null) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleCloseViewer();
+      if (e.key === 'ArrowLeft') handlePrevPlayer();
+      if (e.key === 'ArrowRight') handleNextPlayer();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  });
+
   return (
     <div className="detail-wrapper">
       {/* Tournament Header Bar */}
@@ -192,11 +324,19 @@ export default function TournamentDetail({
             </div>
           )}
           <div>
-            <div className="detail-header-name">{tournamentName}</div>
+            <div className="detail-header-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {tournamentName}
+              {onEdit && (
+                <button className="edit-tournament-btn" onClick={onEdit} title="Edit Tournament Details" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '4px', opacity: 0.7 }}>
+                  ✏️
+                </button>
+              )}
+            </div>
             <div className="detail-header-meta">
               {tournamentYear && <span>{tournamentYear}</span>}
               {clubName && <span> · {clubName}</span>}
               <span> · {players.length} Players</span>
+              <span> · {teams.length} Teams</span>
             </div>
           </div>
         </div>
@@ -209,6 +349,12 @@ export default function TournamentDetail({
           onClick={() => setTab('players')}
         >
           📋 Players ({players.length})
+        </button>
+        <button
+          className={`mode-tab ${tab === 'teams' ? 'active' : ''}`}
+          onClick={() => setTab('teams')}
+        >
+          🏏 Teams ({teams.length})
         </button>
         <button
           className={`mode-tab ${tab === 'create' ? 'active' : ''}`}
@@ -279,8 +425,12 @@ export default function TournamentDetail({
             </div>
           ) : (
             <div className="players-list">
-              {filteredPlayers.map((p) => (
-                <div key={p.id} className={`player-list-item player-list-${p.auction_status}`}>
+              {filteredPlayers.map((p, idx) => (
+                <div
+                  key={p.id}
+                  className={`player-list-item player-list-${p.auction_status} player-list-clickable`}
+                  onClick={() => handleOpenViewer(idx)}
+                >
                   <div className="player-list-avatar">
                     {p.photo_url ? (
                       <img src={p.photo_url} alt={p.name} />
@@ -313,8 +463,119 @@ export default function TournamentDetail({
                       <div className="status-badge status-pending">⏳ PENDING</div>
                     )}
                   </div>
+                  <div className="player-list-view-icon">👁</div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB: Teams Management ── */}
+      {tab === 'teams' && (
+        <div className="detail-players-tab">
+          {/* Create Team Form */}
+          <div className="team-create-card">
+            <h3 className="team-create-title">➕ Create New Team</h3>
+            <div className="team-create-form">
+              <div className="team-create-logo-area">
+                <input
+                  type="file"
+                  ref={teamLogoRef}
+                  accept="image/*"
+                  onChange={handleTeamLogoChange}
+                />
+                <div
+                  className="team-logo-upload"
+                  onClick={() => teamLogoRef.current?.click()}
+                >
+                  {newTeamLogoPreview ? (
+                    <img src={newTeamLogoPreview} alt="Team Logo" />
+                  ) : (
+                    <div className="team-logo-placeholder">
+                      <span>🏏</span>
+                      <span className="team-logo-text">Logo</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="team-create-fields">
+                <div className="form-group">
+                  <label>Team Name</label>
+                  <input
+                    type="text"
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    placeholder="e.g. Chennai Super Kings"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateTeam();
+                    }}
+                  />
+                </div>
+                <button
+                  className="team-create-btn"
+                  onClick={handleCreateTeam}
+                  disabled={teamSaving || !newTeamName.trim()}
+                >
+                  {teamSaving ? '⏳ Creating...' : '🏏 CREATE TEAM'}
+                </button>
+              </div>
+            </div>
+            {teamMessage && (
+              <div className={`team-message ${teamMessage.startsWith('✅') ? 'success' : 'error'}`}>
+                {teamMessage}
+              </div>
+            )}
+          </div>
+
+          {/* Teams List */}
+          {teamsLoading ? (
+            <div className="auction-loading">
+              <div className="auction-loading-spinner" />
+              <p>Loading teams...</p>
+            </div>
+          ) : teams.length === 0 ? (
+            <div className="empty-state" style={{ marginTop: '2rem' }}>
+              <div className="icon">🏏</div>
+              <p>No teams created yet. Create your first team above!</p>
+            </div>
+          ) : (
+            <div className="teams-grid">
+              {teams.map((team) => {
+                // Count players sold to this team
+                const teamPlayerCount = players.filter(
+                  (p) => p.auction_status === 'sold' && p.sold_to === team.name
+                ).length;
+
+                return (
+                  <div key={team.id} className="team-card">
+                    <div className="team-card-logo">
+                      {team.logo_url ? (
+                        <img src={team.logo_url} alt={team.name} />
+                      ) : (
+                        <span className="team-card-logo-fallback">
+                          {team.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="team-card-info">
+                      <div className="team-card-name">{team.name}</div>
+                      <div className="team-card-meta">
+                        {teamPlayerCount > 0
+                          ? `${teamPlayerCount} player${teamPlayerCount !== 1 ? 's' : ''} acquired`
+                          : 'No players yet'}
+                      </div>
+                    </div>
+                    <button
+                      className="team-delete-btn"
+                      onClick={() => handleDeleteTeam(team.id, team.name)}
+                      title="Delete Team"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -328,7 +589,7 @@ export default function TournamentDetail({
             setState={setState}
             tournament={tournament}
             onGenerate={handleGenerate}
-            onEditTournament={() => {}}
+            onEditTournament={onEdit || (() => {})}
             onNewPlayer={handleNewPlayer}
             showCard={showCard}
             saving={saving}
@@ -346,10 +607,70 @@ export default function TournamentDetail({
           clubLogoSrc={clubLogoSrc}
           clubName={clubName}
           players={players}
+          teams={teams}
           onUpdateStatus={handleUpdateStatus}
           onResetAuction={handleResetAuction}
           onRefreshPlayers={fetchPlayers}
         />
+      )}
+
+      {/* ── Player Card Viewer Modal ── */}
+      {viewerIndex !== null && viewerCardState && viewerPlayer && (
+        <div className="card-viewer-overlay" onClick={handleCloseViewer}>
+          <div className="card-viewer-content" onClick={(e) => e.stopPropagation()}>
+            {/* Close Button */}
+            <button className="card-viewer-close" onClick={handleCloseViewer}>
+              ✕
+            </button>
+
+            {/* Previous Button */}
+            <button
+              className="card-viewer-nav card-viewer-prev"
+              onClick={handlePrevPlayer}
+              disabled={filteredPlayers.length <= 1}
+            >
+              ‹
+            </button>
+
+            {/* Card + Info */}
+            <div className="card-viewer-center">
+              <div className="card-viewer-counter">
+                {viewerIndex + 1} / {filteredPlayers.length}
+              </div>
+              <PlayerCard state={viewerCardState} />
+              <div className="card-viewer-status-row">
+                {viewerPlayer.auction_status === 'sold' && (
+                  <div className="status-badge status-sold">
+                    ✅ SOLD
+                    {viewerPlayer.sold_to && (
+                      <span className="sold-to-text">to {viewerPlayer.sold_to}</span>
+                    )}
+                    {viewerPlayer.sold_price && (
+                      <span className="sold-price-text">
+                        ₹{Number(viewerPlayer.sold_price).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {viewerPlayer.auction_status === 'unsold' && (
+                  <div className="status-badge status-unsold">❌ UNSOLD</div>
+                )}
+                {viewerPlayer.auction_status === 'pending' && (
+                  <div className="status-badge status-pending">⏳ PENDING</div>
+                )}
+              </div>
+            </div>
+
+            {/* Next Button */}
+            <button
+              className="card-viewer-nav card-viewer-next"
+              onClick={handleNextPlayer}
+              disabled={filteredPlayers.length <= 1}
+            >
+              ›
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,24 @@
 from rest_framework import serializers
-from .models import Tournament, Player
+from .models import Tournament, Team, Player
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Team
+        fields = ['id', 'tournament', 'name', 'logo', 'logo_url', 'created_at']
+        extra_kwargs = {
+            'logo': {'write_only': True, 'required': False},
+        }
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
 
 
 class PlayerSerializer(serializers.ModelSerializer):
@@ -37,12 +56,13 @@ class PlayerAuctionStatusSerializer(serializers.ModelSerializer):
 class TournamentSerializer(serializers.ModelSerializer):
     club_logo_url = serializers.SerializerMethodField()
     player_count = serializers.SerializerMethodField()
+    team_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Tournament
         fields = [
             'id', 'name', 'year', 'club_name',
-            'club_logo', 'club_logo_url', 'player_count', 'created_at',
+            'club_logo', 'club_logo_url', 'player_count', 'team_count', 'created_at',
         ]
         extra_kwargs = {
             'club_logo': {'write_only': True, 'required': False},
@@ -59,9 +79,13 @@ class TournamentSerializer(serializers.ModelSerializer):
     def get_player_count(self, obj):
         return obj.players.count()
 
+    def get_team_count(self, obj):
+        return obj.teams.count()
+
 
 class TournamentDetailSerializer(TournamentSerializer):
     players = PlayerSerializer(many=True, read_only=True)
+    teams = TeamSerializer(many=True, read_only=True)
 
     class Meta(TournamentSerializer.Meta):
-        fields = TournamentSerializer.Meta.fields + ['players']
+        fields = TournamentSerializer.Meta.fields + ['players', 'teams']

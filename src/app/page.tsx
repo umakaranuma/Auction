@@ -5,9 +5,9 @@ import TournamentPicker from '../components/TournamentPicker';
 import TournamentSetup from '../components/TournamentSetup';
 import TournamentDetail from '../components/TournamentDetail';
 import { TournamentInfo } from '../types';
-import { createTournament } from '../lib/api';
+import { createTournament, updateTournament } from '../lib/api';
 
-type AppView = 'picker' | 'setup' | 'detail';
+type AppView = 'picker' | 'setup' | 'detail' | 'edit';
 
 interface SelectedTournament {
   id: number;
@@ -89,6 +89,36 @@ export default function Home() {
     }
   };
 
+  const handleEditTournament = () => {
+    setView('edit');
+  };
+
+  const handleSaveEditedTournament = async () => {
+    if (!selectedTournament) return;
+    try {
+      setSaving(true);
+      const result = await updateTournament(selectedTournament.id, {
+        name: tournament.tournamentName,
+        year: tournament.tournamentYear,
+        club_name: tournament.clubName,
+        club_logo: tournament.clubLogoFile,
+      });
+      setSelectedTournament({
+        ...selectedTournament,
+        name: tournament.tournamentName,
+        year: tournament.tournamentYear,
+        club_name: tournament.clubName,
+        club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
+      });
+      setView('detail');
+    } catch (error) {
+      console.error('Failed to update tournament:', error);
+      setView('detail');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleBackToPicker = () => {
     setView('picker');
     setSelectedTournament(null);
@@ -127,6 +157,27 @@ export default function Home() {
     );
   }
 
+  // ── VIEW: Tournament Setup (Edit) ──
+  if (view === 'edit') {
+    return (
+      <>
+        <Header />
+        <div className="setup-back-row">
+          <button className="auction-back-btn" onClick={() => setView('detail')}>
+            ← Cancel Edit
+          </button>
+        </div>
+        <TournamentSetup
+          tournament={tournament}
+          setTournament={setTournament}
+          onContinue={handleSaveEditedTournament}
+          saving={saving}
+          isEdit={true}
+        />
+      </>
+    );
+  }
+
   // ── VIEW: Tournament Detail ──
   return (
     <>
@@ -139,6 +190,7 @@ export default function Home() {
           clubName={selectedTournament.club_name}
           clubLogoSrc={selectedTournament.club_logo_url}
           onBack={handleBackToPicker}
+          onEdit={handleEditTournament}
         />
       )}
     </>
