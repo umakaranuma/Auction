@@ -1,12 +1,17 @@
 import React from 'react';
 
-export default function Header() {
+interface HeaderProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export default function Header({ title, subtitle }: HeaderProps) {
   return (
     <header>
       <div className="header-icon">🏏</div>
       <div>
-        <h1>Player Card Generator</h1>
-        <p>T20 WORLD CUP STYLE CARD MAKER</p>
+        <h1>{title || 'Cricket Auction'}</h1>
+        <p>{subtitle || 'TOURNAMENT MANAGEMENT SYSTEM'}</p>
       </div>
     </header>
   );

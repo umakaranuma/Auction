@@ -161,7 +161,6 @@ export default function Home() {
   if (view === 'edit') {
     return (
       <>
-        <Header />
         <div className="setup-back-row">
           <button className="auction-back-btn" onClick={() => setView('detail')}>
             ← Cancel Edit
@@ -181,7 +180,6 @@ export default function Home() {
   // ── VIEW: Tournament Detail ──
   return (
     <>
-      <Header />
       {selectedTournament && (
         <TournamentDetail
           tournamentId={selectedTournament.id}
