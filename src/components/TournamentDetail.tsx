@@ -84,6 +84,9 @@ export default function TournamentDetail({
   const [teamMessage, setTeamMessage] = useState<string | null>(null);
   const teamLogoRef = useRef<HTMLInputElement>(null);
 
+  // Revert confirmation modal
+  const [revertPlayer, setRevertPlayer] = useState<PlayerFromAPI | null>(null);
+
   // Player card viewer modal
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
@@ -211,24 +214,35 @@ export default function TournamentDetail({
   };
 
   // Revert player to pending
-  const handleRevertToPending = async (e: React.MouseEvent, playerId: number) => {
-    e.stopPropagation(); // Don't open the viewer
+  const handleRevertClick = (e: React.MouseEvent, player: PlayerFromAPI) => {
+    e.stopPropagation();
+    setRevertPlayer(player);
+  };
+
+  const handleRevertConfirm = async () => {
+    if (!revertPlayer) return;
     try {
-      await updatePlayerAuctionStatus(playerId, {
+      await updatePlayerAuctionStatus(revertPlayer.id, {
         auction_status: 'pending',
         sold_price: null,
         sold_to: '',
       });
       setPlayers((prev) =>
         prev.map((p) =>
-          p.id === playerId
+          p.id === revertPlayer.id
             ? { ...p, auction_status: 'pending' as const, sold_price: null, sold_to: '' }
             : p
         )
       );
     } catch (err) {
       console.error('Failed to revert player:', err);
+    } finally {
+      setRevertPlayer(null);
     }
+  };
+
+  const handleRevertCancel = () => {
+    setRevertPlayer(null);
   };
 
   // Auction status update
@@ -487,7 +501,7 @@ export default function TournamentDetail({
                   {p.auction_status !== 'pending' && (
                     <button
                       className="player-revert-btn"
-                      onClick={(e) => handleRevertToPending(e, p.id)}
+                      onClick={(e) => handleRevertClick(e, p)}
                       title="Revert to Pending"
                     >
                       ↩️
@@ -699,6 +713,40 @@ export default function TournamentDetail({
             >
               ›
             </button>
+          </div>
+        </div>
+      )}
+      {/* ── Revert Confirmation Modal ── */}
+      {revertPlayer && (
+        <div className="confirm-overlay" onClick={handleRevertCancel}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">↩️</div>
+            <h3 className="confirm-title">Revert Player Status</h3>
+            <p className="confirm-message">
+              Are you sure you want to revert{' '}
+              <strong>{revertPlayer.name}</strong> from{' '}
+              <span className={`confirm-status-label confirm-status-${revertPlayer.auction_status}`}>
+                {revertPlayer.auction_status === 'sold' ? '✅ Sold' : '❌ Unsold'}
+              </span>{' '}
+              back to{' '}
+              <span className="confirm-status-label confirm-status-pending">⏳ Pending</span>?
+            </p>
+            {revertPlayer.auction_status === 'sold' && revertPlayer.sold_to && (
+              <div className="confirm-detail">
+                <span>Team: {revertPlayer.sold_to}</span>
+                {revertPlayer.sold_price && (
+                  <span> · ₹{Number(revertPlayer.sold_price).toLocaleString()}</span>
+                )}
+              </div>
+            )}
+            <div className="confirm-actions">
+              <button className="confirm-cancel-btn" onClick={handleRevertCancel}>
+                Cancel
+              </button>
+              <button className="confirm-ok-btn" onClick={handleRevertConfirm}>
+                Yes, Revert
+              </button>
+            </div>
           </div>
         </div>
       )}
