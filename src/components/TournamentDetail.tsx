@@ -396,6 +396,8 @@ export default function TournamentDetail({
       );
     } catch (err) {
       console.error('Failed to update auction status:', err);
+      alert('Failed to update auction status. Please try again.');
+      throw err;
     }
   };
 

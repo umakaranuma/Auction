@@ -75,6 +75,12 @@ export default function AuctionWheel({
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [roundCompleteMsg, setRoundCompleteMsg] = useState<string | null>(null);
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
+  const [editingAcquiredPrice, setEditingAcquiredPrice] = useState<{
+    playerId: number;
+    draft: string;
+  } | null>(null);
+  const [acquiredPriceSaveError, setAcquiredPriceSaveError] = useState<string | null>(null);
+  const [acquiredPriceSaving, setAcquiredPriceSaving] = useState(false);
 
   // Compute which players are eligible for the current round
   const round1Players = players.filter((p) => p.auction_status === 'pending');
@@ -277,6 +283,59 @@ export default function AuctionWheel({
     setAuctionView('wheel');
   };
 
+  const startEditAcquiredPrice = (ap: PlayerFromAPI, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAcquiredPriceSaveError(null);
+    setEditingAcquiredPrice({
+      playerId: ap.id,
+      draft: String(Number(ap.sold_price) || playerBasePrice),
+    });
+  };
+
+  const cancelEditAcquiredPrice = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingAcquiredPrice(null);
+    setAcquiredPriceSaveError(null);
+  };
+
+  const saveAcquiredPlayerPrice = async (
+    ap: PlayerFromAPI,
+    ts: (typeof teamStats)[number],
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    if (!editingAcquiredPrice || editingAcquiredPrice.playerId !== ap.id) return;
+    const parsed = parseFloat(editingAcquiredPrice.draft.replace(/,/g, ''));
+    const oldP = Number(ap.sold_price) || 0;
+    const maxForRow = ts.remainingBudget + oldP;
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setAcquiredPriceSaveError('Enter a valid amount.');
+      return;
+    }
+    if (parsed < playerBasePrice) {
+      setAcquiredPriceSaveError(`Minimum ₹${playerBasePrice.toLocaleString()} (base price).`);
+      return;
+    }
+    if (parsed > maxForRow) {
+      setAcquiredPriceSaveError(
+        `Max ₹${maxForRow.toLocaleString()} — would exceed team budget.`
+      );
+      return;
+    }
+
+    setAcquiredPriceSaving(true);
+    setAcquiredPriceSaveError(null);
+    try {
+      await onUpdateStatus(ap.id, 'sold', parsed, ap.sold_to || ts.name);
+      setEditingAcquiredPrice(null);
+    } catch {
+      setAcquiredPriceSaveError('Save failed. Try again.');
+    } finally {
+      setAcquiredPriceSaving(false);
+    }
+  };
+
   const handleStartRound2 = () => {
     setAuctionRound(2);
     setRoundCompleteMsg(null);
@@ -410,18 +469,91 @@ export default function AuctionWheel({
                   <div className="acquired-list-header">Acquired Players ({ts.count})</div>
                   {ts.acquiredPlayers.length > 0 ? (
                     <div className="acquired-grid-detailed">
-                      {ts.acquiredPlayers.map(ap => (
-                        <div key={ap.id} className="acquired-item-detailed">
-                          <div className="ap-photo">
-                            {ap.photo_url ? <img src={ap.photo_url} alt={ap.name} /> : <span>{ap.name.charAt(0)}</span>}
+                      {ts.acquiredPlayers.map((ap) => {
+                        const oldP = Number(ap.sold_price) || 0;
+                        const maxForRow = ts.remainingBudget + oldP;
+                        const isEditing = editingAcquiredPrice?.playerId === ap.id;
+                        return (
+                          <div key={ap.id} className="acquired-item-detailed">
+                            <div className="ap-photo">
+                              {ap.photo_url ? (
+                                <img src={ap.photo_url} alt={ap.name} />
+                              ) : (
+                                <span>{ap.name.charAt(0)}</span>
+                              )}
+                            </div>
+                            <div className="ap-info">
+                              <div className="ap-name">{ap.name}</div>
+                              <div className="ap-role">{ap.role || 'No Role'}</div>
+                            </div>
+                            <div
+                              className="ap-price-actions"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {isEditing ? (
+                                <div className="ap-price-edit-panel">
+                                  <label className="ap-price-edit-label">Points</label>
+                                  <input
+                                    type="number"
+                                    className="ap-price-edit-input"
+                                    value={editingAcquiredPrice.draft}
+                                    min={playerBasePrice}
+                                    max={Math.max(playerBasePrice, maxForRow)}
+                                    onChange={(e) =>
+                                      setEditingAcquiredPrice({
+                                        playerId: ap.id,
+                                        draft: e.target.value,
+                                      })
+                                    }
+                                    disabled={acquiredPriceSaving}
+                                  />
+                                  <div className="ap-price-edit-hint">
+                                    Base {'\u20B9'}{playerBasePrice.toLocaleString()} · max {'\u20B9'}
+                                    {maxForRow.toLocaleString()}
+                                  </div>
+                                  {acquiredPriceSaveError && isEditing && (
+                                    <div className="ap-price-edit-error" role="alert">
+                                      {acquiredPriceSaveError}
+                                    </div>
+                                  )}
+                                  <div className="ap-price-edit-btns">
+                                    <button
+                                      type="button"
+                                      className="ap-price-save-btn"
+                                      disabled={acquiredPriceSaving}
+                                      onClick={(e) => saveAcquiredPlayerPrice(ap, ts, e)}
+                                    >
+                                      {acquiredPriceSaving ? '…' : 'Save'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="ap-price-cancel-btn"
+                                      disabled={acquiredPriceSaving}
+                                      onClick={cancelEditAcquiredPrice}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="ap-price">
+                                    {'\u20B9'}
+                                    {Number(ap.sold_price).toLocaleString()}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="ap-price-edit-btn"
+                                    onClick={(e) => startEditAcquiredPrice(ap, e)}
+                                  >
+                                    Edit
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="ap-info">
-                            <div className="ap-name">{ap.name}</div>
-                            <div className="ap-role">{ap.role || 'No Role'}</div>
-                            <div className="ap-price">₹{Number(ap.sold_price).toLocaleString()}</div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="acquired-empty">No players acquired yet</div>
