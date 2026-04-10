@@ -2736,6 +2736,12 @@ input[type="file"] { display: none; }
   color: var(--text-muted);
   margin-top: 4px;
   letter-spacing: 0.5px;
+  line-height: 1.35;
+}
+.team-stat-max-bid-sub {
+  font-size: 0.62rem;
+  font-weight: 500;
+  opacity: 0.95;
 }
 .max-bid-val {
   color: var(--gold);
@@ -2788,6 +2794,17 @@ input[type="file"] { display: none; }
   font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
+}
+.summary-item-block {
+  grid-column: 1 / -1;
+}
+.summary-hint {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 400;
+  line-height: 1.4;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .acquired-list-header {

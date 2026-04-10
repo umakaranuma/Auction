@@ -98,13 +98,23 @@ export default function AuctionWheel({
     const remainingBudget = teamTotalBudget - spent;
     const remainingPlayersNeeded = Math.max(0, maxPlayersPerTeam - count);
     
-    // Max bid is what they can spend on ONE player while still having enough for others
-    // Formula: Remaining Budget - ((slots needed - 1) * Base Price)
-    const maxBidRaw =
+    // Headroom: surplus (positive) or shortfall (negative) if every open slot cost exactly base
+    const maxPossibleBidDisplay =
+      remainingPlayersNeeded > 0
+        ? remainingBudget - remainingPlayersNeeded * playerBasePrice
+        : 0;
+
+    // Max for THIS pick if every other open slot is filled at base (must still be ≥ base to buy)
+    const maxNextBidIfOthersAtBase =
       remainingPlayersNeeded > 0
         ? remainingBudget - (remainingPlayersNeeded - 1) * playerBasePrice
         : 0;
-    const maxBid = Math.max(0, maxBidRaw);
+    const maxBid =
+      remainingPlayersNeeded <= 0
+        ? 0
+        : maxNextBidIfOthersAtBase < playerBasePrice
+          ? 0
+          : maxNextBidIfOthersAtBase;
 
     return {
       ...team,
@@ -113,6 +123,7 @@ export default function AuctionWheel({
       count,
       remainingPlayersNeeded,
       maxBid,
+      maxPossibleBidDisplay,
       acquiredPlayers: teamPlayers,
     };
   });
@@ -182,8 +193,12 @@ export default function AuctionWheel({
         };
       }
       if (price > effectiveMax) {
+        const capHint =
+          effectiveMax <= 0
+            ? ` Purse cannot cover base ₹${playerBasePrice.toLocaleString()} for this pick while reserving base for other open slots (${sel.remainingPlayersNeeded} left).`
+            : '';
         return {
-          error: `${trimmed} cannot pay more than ₹${effectiveMax.toLocaleString()} for this pick (purse + remaining slots at base).`,
+          error: `${trimmed} cannot pay more than ₹${effectiveMax.toLocaleString()} for this pick.${capHint}`,
           canMarkSold: false,
           effectiveMax,
           priceInputInvalid: true,
@@ -439,7 +454,29 @@ export default function AuctionWheel({
                     </span>
                   </div>
                   <div className="team-stat-max-bid">
-                    Max Bid Possible: <span className="max-bid-val">₹{ts.maxBid.toLocaleString()}</span>
+                    Max Possible Bid (open slots × base − purse):{' '}
+                    <span
+                      className={
+                        ts.maxPossibleBidDisplay < 0 ? 'budget-over' : 'max-bid-val'
+                      }
+                    >
+                      {ts.maxPossibleBidDisplay < 0 ? '−' : ''}
+                      {'\u20B9'}
+                      {Math.abs(ts.maxPossibleBidDisplay).toLocaleString()}
+                    </span>
+                    {ts.maxBid > 0 && ts.remainingPlayersNeeded > 0 && (
+                      <span className="team-stat-max-bid-sub">
+                        {' '}
+                        · next pick ≤ {'\u20B9'}
+                        {ts.maxBid.toLocaleString()} at ≥ base
+                      </span>
+                    )}
+                    {ts.maxBid <= 0 && ts.remainingPlayersNeeded > 0 && (
+                      <span className="team-stat-max-bid-sub budget-over">
+                        {' '}
+                        · cannot buy at base with current purse
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="team-expand-icon">{expandedTeamId === ts.id ? '🔼' : '🔽'}</div>
@@ -460,9 +497,35 @@ export default function AuctionWheel({
                       <span className="label">Remaining Slots:</span>
                       <span className="val">{ts.remainingPlayersNeeded}</span>
                     </div>
-                    <div className="summary-item">
-                      <span className="label">Max Possible Bid:</span>
-                      <span className="val max-bid-val">₹{ts.maxBid.toLocaleString()}</span>
+                    <div className="summary-item summary-item-block">
+                      <span className="label">Max Possible Bid (slots × base − purse):</span>
+                      <span
+                        className={`val ${ts.maxPossibleBidDisplay < 0 ? 'budget-over' : 'max-bid-val'}`}
+                      >
+                        {ts.maxPossibleBidDisplay < 0 ? '−' : ''}
+                        {'\u20B9'}
+                        {Math.abs(ts.maxPossibleBidDisplay).toLocaleString()}
+                      </span>
+                      {ts.maxPossibleBidDisplay < 0 && (
+                        <span className="summary-hint budget-over">
+                          Short {'\u20B9'}
+                          {Math.abs(ts.maxPossibleBidDisplay).toLocaleString()} to fill {' '}
+                          {ts.remainingPlayersNeeded} open slot
+                          {ts.remainingPlayersNeeded !== 1 ? 's' : ''} at {'\u20B9'}
+                          {playerBasePrice.toLocaleString()} each.
+                        </span>
+                      )}
+                      {ts.maxBid > 0 && (
+                        <span className="summary-hint">
+                          Next pick max (≥ base): {'\u20B9'}
+                          {ts.maxBid.toLocaleString()}
+                        </span>
+                      )}
+                      {ts.maxBid <= 0 && ts.remainingPlayersNeeded > 0 && (
+                        <span className="summary-hint budget-over">
+                          No valid next bid at base — reduce spend or raise budget.
+                        </span>
+                      )}
                     </div>
                   </div>
 
