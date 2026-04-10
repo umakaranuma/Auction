@@ -387,6 +387,7 @@ export default function AuctionWheel({
         roles: selectedPlayer.role ? [selectedPlayer.role] : [],
         teamTotalBudget,
         maxPlayersPerTeam,
+        playerBasePrice,
       }
     : null;
 
