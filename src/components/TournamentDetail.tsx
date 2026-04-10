@@ -5,7 +5,7 @@ import PreviewPanel from './PreviewPanel';
 import AuctionWheel from './AuctionWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
-import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, getTeams, createTeam, updateTeam, deleteTeam } from '../lib/api';
+import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, clearPlayers, getTeams, createTeam, updateTeam, deleteTeam, deletePlayer } from '../lib/api';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -333,6 +333,33 @@ export default function TournamentDetail({
     setRevertPlayer(null);
   };
 
+  const handleDeletePlayer = async (e: React.MouseEvent, p: PlayerFromAPI) => {
+    e.stopPropagation();
+    if (!confirm(`Are you sure you want to delete player "${p.name}"? This will also remove their photo from storage.`)) return;
+    try {
+      await deletePlayer(p.id);
+      setPlayers(prev => prev.filter(item => item.id !== p.id));
+    } catch (err) {
+      console.error('Failed to delete player:', err);
+      alert('Failed to delete player');
+    }
+  };
+
+  const handleClearPlayers = async () => {
+    if (!confirm('💥 WARNING: This will delete ALL players in this tournament and ALL their images from Supabase. This cannot be undone. Proceed?')) return;
+    try {
+      setLoading(true);
+      await clearPlayers(tournamentId);
+      setPlayers([]);
+      alert('✅ All players and images cleared.');
+    } catch (err) {
+      console.error('Failed to clear players:', err);
+      alert('Failed to clear players');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Auction status update
   const handleUpdateStatus = async (
     playerId: number,
@@ -518,6 +545,27 @@ export default function TournamentDetail({
               <span className="auction-stat-num">{unsoldCount}</span>
               <span className="auction-stat-label">Unsold</span>
             </div>
+            <button 
+              className="clear-all-btn" 
+              onClick={handleClearPlayers}
+              title="Delete all players and images"
+              style={{
+                marginLeft: 'auto',
+                background: 'rgba(255, 68, 68, 0.1)',
+                border: '1px solid rgba(255, 68, 68, 0.3)',
+                color: '#ff4444',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255, 68, 68, 0.2)')}
+              onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(255, 68, 68, 0.1)')}
+            >
+              💥 CLEAR ALL
+            </button>
           </div>
 
           {/* Search Bar */}
@@ -628,6 +676,24 @@ export default function TournamentDetail({
                       </button>
                     )}
                     <div className="player-list-view-icon">👁</div>
+                    <button
+                      className="player-delete-icon-btn"
+                      onClick={(e) => handleDeletePlayer(e, p)}
+                      title="Delete Player"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '1.2rem',
+                        marginLeft: '10px',
+                        opacity: 0.6,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                      onMouseOut={(e) => e.currentTarget.style.opacity = '0.6'}
+                    >
+                      🗑️
+                    </button>
                 </div>
               ))}
             </div>

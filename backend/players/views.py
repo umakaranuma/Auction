@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Tournament, Team, Player
+from .supabase_client import delete_image_from_supabase
 from .serializers import (
     TournamentSerializer,
     TournamentDetailSerializer,
@@ -29,6 +30,39 @@ class TournamentViewSet(viewsets.ModelViewSet):
             auction_status='pending', sold_price=None, sold_to=''
         )
         return Response({'status': 'auction reset'})
+
+    @action(detail=True, methods=['post'], url_path='clear-players')
+    def clear_players(self, request, pk=None):
+        """Delete all players in this tournament and their images in Supabase."""
+        tournament = self.get_object()
+        players = tournament.players.all()
+        
+        # Collect all photo URLs to delete from Supabase
+        photo_urls = [p.photo for p in players if p.photo]
+        
+        if photo_urls:
+            # Batch delete photos from Supabase
+            from .supabase_client import get_supabase_client, os
+            supabase = get_supabase_client()
+            bucket_name = os.getenv("SUPABASE_BUCKET", "cricket")
+            
+            # Extract paths
+            paths = []
+            for url in photo_urls:
+                parts = url.split(f"/{bucket_name}/")
+                if len(parts) >= 2:
+                    paths.append(parts[1])
+            
+            if paths:
+                try:
+                    supabase.storage.from_(bucket_name).remove(paths)
+                except Exception as e:
+                    print(f"[SUPABASE CLEAR ALL ERROR] {e}")
+
+        # Delete from database
+        players.delete()
+        
+        return Response({'status': 'all players cleared and images removed'})
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -58,6 +92,12 @@ class PlayerViewSet(viewsets.ModelViewSet):
         if auction_status:
             qs = qs.filter(auction_status=auction_status)
         return qs
+
+    def perform_destroy(self, instance):
+        # Delete photo from Supabase if it exists
+        if instance.photo:
+            delete_image_from_supabase(instance.photo)
+        instance.delete()
 
     @action(detail=True, methods=['patch'], url_path='auction-status')
     def auction_status(self, request, pk=None):

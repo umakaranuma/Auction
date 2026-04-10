@@ -54,3 +54,29 @@ def upload_image_to_supabase(file_obj, folder_name="images") -> str:
         
         # Re-raise to let the serializer handle the API response
         raise e
+
+def delete_image_from_supabase(public_url: str) -> bool:
+    """
+    Deletes an image from Supabase Storage using its public URL.
+    Returns True if successful, False otherwise.
+    """
+    if not public_url:
+        return False
+
+    supabase = get_supabase_client()
+    bucket_name = os.getenv("SUPABASE_BUCKET", "cricket")
+
+    # Extract the relative path from the public URL
+    # Format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
+    parts = public_url.split(f"/{bucket_name}/")
+    if len(parts) < 2:
+        return False
+    
+    file_path = parts[1]
+
+    try:
+        supabase.storage.from_(bucket_name).remove([file_path])
+        return True
+    except Exception as e:
+        print(f"[SUPABASE DELETE ERROR] Failed to delete {file_path}: {e}")
+        return False

@@ -83,6 +83,15 @@ export async function resetAuction(tournamentId: number) {
   return res.json();
 }
 
+export async function clearPlayers(tournamentId: number) {
+  const res = await fetch(`${API_BASE}/tournaments/${tournamentId}/clear-players/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to clear players');
+  return res.json();
+}
+
 // ── Team API ───────────────────────────────
 
 export async function getTeams(tournamentId: number) {
