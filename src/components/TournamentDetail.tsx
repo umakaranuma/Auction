@@ -81,6 +81,8 @@ export default function TournamentDetail({
   const [playerFilter, setPlayerFilter] = useState<'all' | 'pending' | 'sold' | 'unsold'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [deletePlayerConfirm, setDeletePlayerConfirm] = useState<PlayerFromAPI | null>(null);
 
   // Team creation state
   const [newTeamName, setNewTeamName] = useState('');
@@ -333,25 +335,34 @@ export default function TournamentDetail({
     setRevertPlayer(null);
   };
 
-  const handleDeletePlayer = async (e: React.MouseEvent, p: PlayerFromAPI) => {
+  const handleDeletePlayer = (e: React.MouseEvent, p: PlayerFromAPI) => {
     e.stopPropagation();
-    if (!confirm(`Are you sure you want to delete player "${p.name}"? This will also remove their photo from storage.`)) return;
+    setDeletePlayerConfirm(p);
+  };
+
+  const confirmDeletePlayer = async () => {
+    if (!deletePlayerConfirm) return;
     try {
-      await deletePlayer(p.id);
-      setPlayers(prev => prev.filter(item => item.id !== p.id));
+      await deletePlayer(deletePlayerConfirm.id);
+      setPlayers(prev => prev.filter(item => item.id !== deletePlayerConfirm.id));
     } catch (err) {
       console.error('Failed to delete player:', err);
       alert('Failed to delete player');
+    } finally {
+      setDeletePlayerConfirm(null);
     }
   };
 
-  const handleClearPlayers = async () => {
-    if (!confirm('💥 WARNING: This will delete ALL players in this tournament and ALL their images from Supabase. This cannot be undone. Proceed?')) return;
+  const handleClearPlayers = () => {
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearPlayers = async () => {
     try {
       setLoading(true);
+      setShowClearConfirm(false);
       await clearPlayers(tournamentId);
       setPlayers([]);
-      alert('✅ All players and images cleared.');
     } catch (err) {
       console.error('Failed to clear players:', err);
       alert('Failed to clear players');
@@ -1011,6 +1022,51 @@ export default function TournamentDetail({
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Clear All Confirmation Modal ── */}
+      {showClearConfirm && (
+        <div className="confirm-overlay" onClick={() => setShowClearConfirm(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon" style={{ background: 'rgba(255, 68, 68, 0.1)', color: '#ff4444' }}>💥</div>
+            <h3 className="confirm-title">Clear All Players?</h3>
+            <p className="confirm-message">
+              This will permanently delete <strong>ALL {players.length} players</strong> and their photos from Supabase storage. 
+              <br/><br/>
+              <span style={{ color: '#ff4444', fontWeight: 'bold' }}>This action cannot be undone.</span>
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel-btn" onClick={() => setShowClearConfirm(false)}>
+                Cancel
+              </button>
+              <button className="confirm-ok-btn" style={{ background: '#ff4444' }} onClick={confirmClearPlayers}>
+                Yes, Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Individual Delete Confirmation Modal ── */}
+      {deletePlayerConfirm && (
+        <div className="confirm-overlay" onClick={() => setDeletePlayerConfirm(null)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon" style={{ background: 'rgba(255, 68, 68, 0.1)', color: '#ff4444' }}>🗑️</div>
+            <h3 className="confirm-title">Delete Player?</h3>
+            <p className="confirm-message">
+              Are you sure you want to delete <strong>{deletePlayerConfirm.name}</strong>? 
+              Their profile and photo will be permanently removed.
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel-btn" onClick={() => setDeletePlayerConfirm(null)}>
+                Cancel
+              </button>
+              <button className="confirm-ok-btn" style={{ background: '#ff4444' }} onClick={confirmDeletePlayer}>
+                Delete
+              </button>
             </div>
           </div>
         </div>
