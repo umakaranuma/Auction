@@ -285,17 +285,37 @@ export default function AuctionWheel({
               
               {expandedTeamId === ts.id && (
                 <div className="team-acquired-list" onClick={(e) => e.stopPropagation()}>
+                  <div className="acquired-list-summary">
+                    <div className="summary-item">
+                      <span className="label">Available Points:</span>
+                      <span className="val budget-ok">₹{ts.remainingBudget.toLocaleString()}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="label">Points Spent:</span>
+                      <span className="val">₹{ts.spent.toLocaleString()}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="label">Remaining Slots:</span>
+                      <span className="val">{ts.remainingPlayersNeeded}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="label">Max Possible Bid:</span>
+                      <span className="val max-bid-val">₹{ts.maxBid.toLocaleString()}</span>
+                    </div>
+                  </div>
+
                   <div className="acquired-list-header">Acquired Players ({ts.count})</div>
                   {ts.acquiredPlayers.length > 0 ? (
-                    <div className="acquired-grid">
+                    <div className="acquired-grid-detailed">
                       {ts.acquiredPlayers.map(ap => (
-                        <div key={ap.id} className="acquired-item">
-                          <div className="acquired-photo">
+                        <div key={ap.id} className="acquired-item-detailed">
+                          <div className="ap-photo">
                             {ap.photo_url ? <img src={ap.photo_url} alt={ap.name} /> : <span>{ap.name.charAt(0)}</span>}
                           </div>
-                          <div className="acquired-meta">
-                            <div className="acquired-name">{ap.name}</div>
-                            <div className="acquired-price">₹{Number(ap.sold_price).toLocaleString()}</div>
+                          <div className="ap-info">
+                            <div className="ap-name">{ap.name}</div>
+                            <div className="ap-role">{ap.role || 'No Role'}</div>
+                            <div className="ap-price">₹{Number(ap.sold_price).toLocaleString()}</div>
                           </div>
                         </div>
                       ))}
