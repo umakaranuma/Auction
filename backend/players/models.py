@@ -5,7 +5,7 @@ class Tournament(models.Model):
     name = models.CharField(max_length=200)
     year = models.CharField(max_length=50, blank=True, default='')
     club_name = models.CharField(max_length=200, blank=True, default='')
-    club_logo = models.ImageField(upload_to='logos/', blank=True, null=True)
+    club_logo = models.URLField(max_length=500, blank=True, null=True)
     team_total_budget = models.IntegerField(default=1000)
     max_players_per_team = models.IntegerField(default=15)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -22,7 +22,7 @@ class Team(models.Model):
         Tournament, on_delete=models.CASCADE, related_name='teams'
     )
     name = models.CharField(max_length=200)
-    logo = models.ImageField(upload_to='team_logos/', blank=True, null=True)
+    logo = models.URLField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -59,7 +59,7 @@ class Player(models.Model):
         Tournament, on_delete=models.CASCADE, related_name='players'
     )
     name = models.CharField(max_length=200)
-    photo = models.ImageField(upload_to='players/', blank=True, null=True)
+    photo = models.URLField(max_length=500, blank=True, null=True)
     jersey_number = models.CharField(max_length=10, blank=True, default='')
     age = models.CharField(max_length=10, blank=True, default='')
     phone = models.CharField(max_length=30, blank=True, default='')
