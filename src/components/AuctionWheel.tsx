@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SpinWheel from './SpinWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState } from '../types';
@@ -94,9 +94,11 @@ export default function AuctionWheel({
     
     // Max bid is what they can spend on ONE player while still having enough for others
     // Formula: Remaining Budget - ((slots needed - 1) * Base Price)
-    const maxBid = remainingPlayersNeeded > 0 
-      ? remainingBudget - ((remainingPlayersNeeded - 1) * playerBasePrice)
-      : 0;
+    const maxBidRaw =
+      remainingPlayersNeeded > 0
+        ? remainingBudget - (remainingPlayersNeeded - 1) * playerBasePrice
+        : 0;
+    const maxBid = Math.max(0, maxBidRaw);
 
     return {
       ...team,
@@ -123,6 +125,104 @@ export default function AuctionWheel({
     }
   }, [round1Complete, unsoldPlayers.length, soldPlayers.length, auctionRound]);
 
+  /** Live validation for Mark as Sold (team budget / max bid / base / roster). */
+  const saleValidation = useMemo(() => {
+    const trimmed = soldTo.trim();
+    const parsed = parseFloat(String(soldPrice).replace(/,/g, ''));
+    const price = Number.isFinite(parsed) ? parsed : NaN;
+
+    if (!trimmed) {
+      return {
+        error: null as string | null,
+        canMarkSold: false,
+        effectiveMax: null as number | null,
+        priceInputInvalid: false,
+      };
+    }
+
+    if (teams.length > 0) {
+      const sel = teamStats.find((t) => t.name === trimmed);
+      if (!sel) {
+        return {
+          error: 'Choose a team from the list.',
+          canMarkSold: false,
+          effectiveMax: null,
+          priceInputInvalid: false,
+        };
+      }
+      const effectiveMax = Math.max(0, sel.maxBid);
+      if (sel.remainingPlayersNeeded <= 0) {
+        return {
+          error: `${trimmed} has no open slots (limit ${maxPlayersPerTeam}).`,
+          canMarkSold: false,
+          effectiveMax,
+          priceInputInvalid: false,
+        };
+      }
+      if (!Number.isFinite(price) || price <= 0) {
+        return {
+          error: 'Enter a valid price.',
+          canMarkSold: false,
+          effectiveMax,
+          priceInputInvalid: true,
+        };
+      }
+      if (price < playerBasePrice) {
+        return {
+          error: `Price must be at least base ₹${playerBasePrice.toLocaleString()}.`,
+          canMarkSold: false,
+          effectiveMax,
+          priceInputInvalid: true,
+        };
+      }
+      if (price > effectiveMax) {
+        return {
+          error: `${trimmed} cannot pay more than ₹${effectiveMax.toLocaleString()} for this pick (purse + remaining slots at base).`,
+          canMarkSold: false,
+          effectiveMax,
+          priceInputInvalid: true,
+        };
+      }
+      return {
+        error: null,
+        canMarkSold: true,
+        effectiveMax,
+        priceInputInvalid: false,
+      };
+    }
+
+    // No teams registered — free-text buyer name; only enforce base price
+    if (!Number.isFinite(price) || price <= 0) {
+      return {
+        error: 'Enter a valid price.',
+        canMarkSold: false,
+        effectiveMax: null,
+        priceInputInvalid: true,
+      };
+    }
+    if (price < playerBasePrice) {
+      return {
+        error: `Price must be at least base ₹${playerBasePrice.toLocaleString()}.`,
+        canMarkSold: false,
+        effectiveMax: null,
+        priceInputInvalid: true,
+      };
+    }
+    return {
+      error: null,
+      canMarkSold: true,
+      effectiveMax: null,
+      priceInputInvalid: false,
+    };
+  }, [
+    soldTo,
+    soldPrice,
+    teamStats,
+    teams.length,
+    playerBasePrice,
+    maxPlayersPerTeam,
+  ]);
+
   const handleSpin = () => {
     if (spinning || eligiblePlayers.length === 0) return;
     setSelectedPlayer(null);
@@ -147,17 +247,20 @@ export default function AuctionWheel({
 
   const handleMarkSold = async () => {
     if (!selectedPlayer || statusUpdating) return;
+    if (!saleValidation.canMarkSold) return;
+    const price = parseFloat(String(soldPrice).replace(/,/g, ''));
+    if (!Number.isFinite(price)) return;
+
     setStatusUpdating(true);
-    await onUpdateStatus(
-      selectedPlayer.id,
-      'sold',
-      soldPrice ? parseFloat(soldPrice) : undefined,
-      soldTo || undefined
-    );
-    setSelectedPlayer(null);
-    setSoldPrice(String(playerBasePrice));
-    setAuctionView('wheel');
-    setStatusUpdating(false);
+    try {
+      await onUpdateStatus(selectedPlayer.id, 'sold', price, soldTo.trim() || undefined);
+      setSelectedPlayer(null);
+      setSoldPrice(String(playerBasePrice));
+      setSoldTo('');
+      setAuctionView('wheel');
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
   const handleMarkUnsold = async () => {
@@ -394,13 +497,18 @@ export default function AuctionWheel({
                           value={soldTo}
                           onChange={(e) => setSoldTo(e.target.value)}
                           className="team-select"
+                          aria-invalid={!!saleValidation.error && teams.length > 0}
                         >
                           <option value="">— Select Team —</option>
-                          {teams.map((t) => (
-                            <option key={t.id} value={t.name}>
-                              {t.name}
-                            </option>
-                          ))}
+                          {teams.map((t) => {
+                            const st = teamStats.find((x) => x.id === t.id);
+                            const full = st != null && st.remainingPlayersNeeded <= 0;
+                            return (
+                              <option key={t.id} value={t.name} disabled={full}>
+                                {full ? `${t.name} (squad full)` : t.name}
+                              </option>
+                            );
+                          })}
                         </select>
                         {(() => {
                           const selectedTeamObj = teams.find(t => t.name === soldTo);
@@ -420,7 +528,20 @@ export default function AuctionWheel({
                         value={soldTo}
                         onChange={(e) => setSoldTo(e.target.value)}
                         placeholder="e.g. Chennai Kings"
+                        aria-invalid={!!saleValidation.error}
                       />
+                    )}
+                    {teams.length > 0 && soldTo.trim() && saleValidation.effectiveMax !== null && (
+                      <div className="auction-sale-hint">
+                        Max for this pick:{' '}
+                        <span className="max-bid-val">
+                          {'₹'}
+                          {saleValidation.effectiveMax.toLocaleString()}
+                        </span>
+                        {teamStats.find((t) => t.name === soldTo.trim())?.remainingPlayersNeeded === 0
+                          ? ' · squad full'
+                          : null}
+                      </div>
                     )}
                   </div>
                   <div className="form-group auction-input-group">
@@ -429,15 +550,36 @@ export default function AuctionWheel({
                       type="number"
                       value={soldPrice}
                       onChange={(e) => setSoldPrice(e.target.value)}
-                      placeholder="e.g. 50000"
+                      placeholder={`Min ₹${playerBasePrice.toLocaleString()}`}
+                      min={playerBasePrice}
+                      max={
+                        saleValidation.effectiveMax != null && saleValidation.effectiveMax > 0
+                          ? Math.max(playerBasePrice, saleValidation.effectiveMax)
+                          : undefined
+                      }
+                      className={saleValidation.priceInputInvalid ? 'auction-input-invalid' : undefined}
+                      aria-invalid={saleValidation.priceInputInvalid}
                     />
                   </div>
                 </div>
+                {saleValidation.error && (
+                  <div className="auction-validation-msg" role="alert">
+                    <span className="auction-validation-icon" aria-hidden>
+                      {'⚠️'}
+                    </span>
+                    {saleValidation.error}
+                  </div>
+                )}
                 <div className="auction-action-buttons">
                   <button
                     className="auction-sold-btn"
                     onClick={handleMarkSold}
-                    disabled={statusUpdating}
+                    disabled={statusUpdating || !saleValidation.canMarkSold}
+                    title={
+                      !saleValidation.canMarkSold
+                        ? 'Select a team and enter a price within that team’s max bid'
+                        : undefined
+                    }
                   >
                     {statusUpdating ? '⏳' : '✅'} MARK AS SOLD
                   </button>

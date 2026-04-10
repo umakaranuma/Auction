@@ -1996,6 +1996,33 @@ input[type="file"] { display: none; }
   padding: 6px 10px !important;
   font-size: 0.85rem !important;
 }
+.auction-input-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
+}
+.auction-sale-hint {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.auction-validation-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.auction-validation-icon {
+  flex-shrink: 0;
+  line-height: 1.4;
+}
 .auction-action-buttons {
   display: flex;
   gap: 8px;
