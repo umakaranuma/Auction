@@ -1,8 +1,8 @@
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ||
-  (process.env.NODE_ENV === 'development'
+  process.env.NODE_ENV === 'development'
     ? 'http://127.0.0.1:8000/api'
-    : 'https://auction_backend-production.up.railway.app/api');
+    : process.env.NEXT_PUBLIC_API_BASE ||
+      'https://auctionbackend-production-ed2c.up.railway.app/api';
 
 // ── Tournament API ─────────────────────────
 
