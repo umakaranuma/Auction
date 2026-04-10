@@ -664,17 +664,6 @@ export default function AuctionWheel({
                             );
                           })}
                         </select>
-                        {(() => {
-                          const selectedTeamObj = teams.find(t => t.name === soldTo);
-                          if (selectedTeamObj && selectedTeamObj.logo_url) {
-                            return (
-                              <div className="team-select-logo">
-                                <img src={selectedTeamObj.logo_url} alt={selectedTeamObj.name} />
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
                       </div>
                     ) : (
                       <input
