@@ -5,7 +5,7 @@ import PreviewPanel from './PreviewPanel';
 import AuctionWheel from './AuctionWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
-import { getPlayers, createPlayer, updatePlayerAuctionStatus, resetAuction, getTeams, createTeam, updateTeam, deleteTeam } from '../lib/api';
+import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, getTeams, createTeam, updateTeam, deleteTeam } from '../lib/api';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -80,6 +80,7 @@ export default function TournamentDetail({
   const [showCard, setShowCard] = useState(false);
   const [playerFilter, setPlayerFilter] = useState<'all' | 'pending' | 'sold' | 'unsold'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
 
   // Team creation state
   const [newTeamName, setNewTeamName] = useState('');
@@ -147,14 +148,14 @@ export default function TournamentDetail({
     fetchTeams();
   }, [fetchPlayers, fetchTeams]);
 
-  // Player creation
+  // Player creation / update
   const handleGenerate = async () => {
     setShowCard(true);
     setSaveMessage(null);
     if (state.playerName.trim()) {
       try {
         setSaving(true);
-        await createPlayer({
+        const playerData = {
           tournament: tournamentId,
           name: state.playerName,
           photo: state.playerPhotoFile,
@@ -165,8 +166,15 @@ export default function TournamentDetail({
           batting_hand: state.battingHand,
           bowling_hand: state.bowlingHand,
           role: state.roles.length > 0 ? state.roles[0] : '',
-        });
-        setSaveMessage('✅ Player saved successfully!');
+        };
+
+        if (editingPlayerId) {
+          await updatePlayer(editingPlayerId, playerData);
+          setSaveMessage('✅ Player updated successfully!');
+        } else {
+          await createPlayer(playerData);
+          setSaveMessage('✅ Player saved successfully!');
+        }
         fetchPlayers(); // Refresh players list
       } catch (error) {
         console.error('Failed to save player:', error);
@@ -177,8 +185,31 @@ export default function TournamentDetail({
     }
   };
 
+  const handleEditPlayer = (e: React.MouseEvent, p: PlayerFromAPI) => {
+    e.stopPropagation();
+    setEditingPlayerId(p.id);
+    setState({
+      ...tournament,
+      playerName: p.name,
+      playerPhotoSrc: p.photo_url,
+      playerPhotoFile: null,
+      jerseyNumber: p.jersey_number,
+      playerAge: p.age,
+      playerPhone: p.phone,
+      playerNationality: p.nationality,
+      battingHand: p.batting_hand,
+      bowlingHand: p.bowling_hand,
+      bowlingStyle: '',
+      roles: p.role ? [p.role] : [],
+    });
+    setTab('create');
+    setShowCard(false);
+    setSaveMessage(null);
+  };
+
   const handleNewPlayer = () => {
     setState({ ...tournament, ...defaultPlayerFields });
+    setEditingPlayerId(null);
     setShowCard(false);
     setSaveMessage(null);
   };
@@ -579,16 +610,24 @@ export default function TournamentDetail({
                       <div className="status-badge status-pending">⏳ PENDING</div>
                     )}
                   </div>
-                  {p.auction_status !== 'pending' && (
                     <button
                       className="player-revert-btn"
-                      onClick={(e) => handleRevertClick(e, p)}
-                      title="Revert to Pending"
+                      style={{ marginRight: '40px' }}
+                      onClick={(e) => handleEditPlayer(e, p)}
+                      title="Edit Player"
                     >
-                      ↩️
+                      ✏️
                     </button>
-                  )}
-                  <div className="player-list-view-icon">👁</div>
+                    {p.auction_status !== 'pending' && (
+                      <button
+                        className="player-revert-btn"
+                        onClick={(e) => handleRevertClick(e, p)}
+                        title="Revert to Pending"
+                      >
+                        ↩️
+                      </button>
+                    )}
+                    <div className="player-list-view-icon">👁</div>
                 </div>
               ))}
             </div>
@@ -727,6 +766,7 @@ export default function TournamentDetail({
             onNewPlayer={handleNewPlayer}
             showCard={showCard}
             saving={saving}
+            isEdit={!!editingPlayerId}
           />
           <PreviewPanel state={state} showCard={showCard} saveMessage={saveMessage} />
         </div>
@@ -794,6 +834,16 @@ export default function TournamentDetail({
                 {viewerPlayer.auction_status === 'pending' && (
                   <div className="status-badge status-pending">⏳ PENDING</div>
                 )}
+                <button
+                  className="viewer-edit-btn"
+                  onClick={(e) => {
+                    handleCloseViewer();
+                    handleEditPlayer(e, viewerPlayer);
+                  }}
+                  title="Edit Player Profile"
+                >
+                  ✏️ Edit Profile
+                </button>
               </div>
             </div>
 

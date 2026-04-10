@@ -192,6 +192,39 @@ export async function deletePlayer(id: number) {
   if (!res.ok) throw new Error('Failed to delete player');
 }
 
+export async function updatePlayer(id: number, data: {
+  name?: string;
+  photo?: File | null;
+  jersey_number?: string;
+  age?: string;
+  phone?: string;
+  nationality?: string;
+  batting_hand?: string;
+  bowling_hand?: string;
+  role?: string;
+}) {
+  const formData = new FormData();
+  if (data.name !== undefined) formData.append('name', data.name);
+  if (data.photo) formData.append('photo', data.photo);
+  if (data.jersey_number !== undefined) formData.append('jersey_number', data.jersey_number);
+  if (data.age !== undefined) formData.append('age', data.age);
+  if (data.phone !== undefined) formData.append('phone', data.phone);
+  if (data.nationality !== undefined) formData.append('nationality', data.nationality);
+  if (data.batting_hand !== undefined) formData.append('batting_hand', data.batting_hand);
+  if (data.bowling_hand !== undefined) formData.append('bowling_hand', data.bowling_hand);
+  if (data.role !== undefined) formData.append('role', data.role);
+
+  const res = await fetch(`${API_BASE}/players/${id}/`, {
+    method: 'PATCH',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
 export async function updatePlayerAuctionStatus(
   playerId: number,
   data: {

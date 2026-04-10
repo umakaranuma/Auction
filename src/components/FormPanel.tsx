@@ -11,9 +11,10 @@ interface FormPanelProps {
   onNewPlayer: () => void;
   showCard: boolean;
   saving?: boolean;
+  isEdit?: boolean;
 }
 
-export default function FormPanel({ state, setState, tournament, onGenerate, onEditTournament, onNewPlayer, showCard, saving }: FormPanelProps) {
+export default function FormPanel({ state, setState, tournament, onGenerate, onEditTournament, onNewPlayer, showCard, saving, isEdit }: FormPanelProps) {
   const handleInput = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setState(prev => ({ ...prev, [name]: value }));
@@ -122,7 +123,7 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
 
       <div className="form-actions">
         <button className="gen-btn" onClick={onGenerate} disabled={saving}>
-          {saving ? '⏳ SAVING...' : '⚡ Generate Player Card'}
+          {saving ? '⏳ SAVING...' : (isEdit ? '💾 SAVE PLAYER CHANGES' : '⚡ Generate Player Card')}
         </button>
         {showCard && (
           <button className="new-player-btn" onClick={onNewPlayer}>➕ NEW PLAYER</button>
