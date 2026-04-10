@@ -7,9 +7,10 @@ import PlayerCard from './PlayerCard';
 interface PreviewPanelProps {
   state: PlayerCardState;
   showCard: boolean;
+  saveMessage?: string | null;
 }
 
-export default function PreviewPanel({ state, showCard }: PreviewPanelProps) {
+export default function PreviewPanel({ state, showCard, saveMessage }: PreviewPanelProps) {
   const downloadCard = async () => {
     const card = document.getElementById('player-card');
     if (!card) return;
@@ -57,6 +58,16 @@ export default function PreviewPanel({ state, showCard }: PreviewPanelProps) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
           <PlayerCard state={state} />
+          {saveMessage && (
+            <div style={{
+              fontSize: '0.8rem',
+              letterSpacing: '1px',
+              color: saveMessage.startsWith('✅') ? '#4ade80' : '#fbbf24',
+              textAlign: 'center',
+            }}>
+              {saveMessage}
+            </div>
+          )}
           <button className="download-btn" onClick={downloadCard}>⬇ DOWNLOAD CARD</button>
         </div>
       )}

@@ -6,9 +6,11 @@ interface TournamentSetupProps {
   tournament: TournamentInfo;
   setTournament: React.Dispatch<React.SetStateAction<TournamentInfo>>;
   onContinue: () => void;
+  saving?: boolean;
+  isEdit?: boolean;
 }
 
-export default function TournamentSetup({ tournament, setTournament, onContinue }: TournamentSetupProps) {
+export default function TournamentSetup({ tournament, setTournament, onContinue, saving, isEdit }: TournamentSetupProps) {
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTournament(prev => ({ ...prev, [name]: value }));
@@ -20,7 +22,7 @@ export default function TournamentSetup({ tournament, setTournament, onContinue 
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setTournament(prev => ({ ...prev, clubLogoSrc: dataUrl }));
+      setTournament(prev => ({ ...prev, clubLogoSrc: dataUrl, clubLogoFile: file }));
     };
     reader.readAsDataURL(file);
   };
@@ -31,8 +33,10 @@ export default function TournamentSetup({ tournament, setTournament, onContinue 
     <div className="setup-screen">
       <div className="setup-card">
         <div className="setup-icon">🏏</div>
-        <h2 className="setup-title">TOURNAMENT SETUP</h2>
-        <p className="setup-subtitle">Configure your tournament details once, then create cards for all your players</p>
+        <h2 className="setup-title">{isEdit ? 'EDIT TOURNAMENT' : 'TOURNAMENT SETUP'}</h2>
+        <p className="setup-subtitle">
+          {isEdit ? 'Update your tournament details below' : 'Configure your tournament details once, then create cards for all your players'}
+        </p>
 
         <div className="setup-form">
           <div className="form-group">
@@ -46,6 +50,20 @@ export default function TournamentSetup({ tournament, setTournament, onContinue 
           <div className="form-group">
             <label>Club / Team Name</label>
             <input type="text" name="clubName" value={tournament.clubName} placeholder="e.g. Uduppiddy Youth" onChange={handleInput} />
+          </div>
+          <div className="setup-row" style={{ display: 'flex', gap: '1rem' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Team Total Budget</label>
+              <input type="number" name="teamTotalBudget" value={tournament.teamTotalBudget} placeholder="e.g. 1000" onChange={handleInput} />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Max Players per Team</label>
+              <input type="number" name="maxPlayersPerTeam" value={tournament.maxPlayersPerTeam} placeholder="e.g. 15" onChange={handleInput} />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Player Base Price</label>
+              <input type="number" name="playerBasePrice" value={tournament.playerBasePrice} placeholder="e.g. 10" onChange={handleInput} />
+            </div>
           </div>
           <div className="form-group">
             <label>Club / Team Logo</label>
@@ -64,8 +82,8 @@ export default function TournamentSetup({ tournament, setTournament, onContinue 
             </div>
           </div>
 
-          <button className="gen-btn" onClick={onContinue} disabled={!canContinue} style={{ opacity: canContinue ? 1 : 0.5 }}>
-            🎯 CONTINUE TO PLAYER CARDS
+          <button className="gen-btn" onClick={onContinue} disabled={!canContinue || saving} style={{ opacity: canContinue && !saving ? 1 : 0.5 }}>
+            {saving ? '⏳ SAVING...' : (isEdit ? '💾 SAVE CHANGES' : '🎯 CONTINUE TO PLAYER CARDS')}
           </button>
         </div>
       </div>
