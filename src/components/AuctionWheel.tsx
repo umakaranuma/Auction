@@ -454,29 +454,11 @@ export default function AuctionWheel({
                     </span>
                   </div>
                   <div className="team-stat-max-bid">
-                    Max Possible Bid (open slots × base − purse):{' '}
-                    <span
-                      className={
-                        ts.maxPossibleBidDisplay < 0 ? 'budget-over' : 'max-bid-val'
-                      }
-                    >
-                      {ts.maxPossibleBidDisplay < 0 ? '−' : ''}
+                    Max Possible Bid (slots × base − purse):{' '}
+                    <span className={ts.maxBid > 0 ? 'max-bid-val' : 'budget-over'}>
                       {'\u20B9'}
-                      {Math.abs(ts.maxPossibleBidDisplay).toLocaleString()}
+                      {ts.maxBid.toLocaleString()}
                     </span>
-                    {ts.maxBid > 0 && ts.remainingPlayersNeeded > 0 && (
-                      <span className="team-stat-max-bid-sub">
-                        {' '}
-                        · next pick ≤ {'\u20B9'}
-                        {ts.maxBid.toLocaleString()} at ≥ base
-                      </span>
-                    )}
-                    {ts.maxBid <= 0 && ts.remainingPlayersNeeded > 0 && (
-                      <span className="team-stat-max-bid-sub budget-over">
-                        {' '}
-                        · cannot buy at base with current purse
-                      </span>
-                    )}
                   </div>
                 </div>
                 <div className="team-expand-icon">{expandedTeamId === ts.id ? '🔼' : '🔽'}</div>
@@ -499,33 +481,10 @@ export default function AuctionWheel({
                     </div>
                     <div className="summary-item summary-item-block">
                       <span className="label">Max Possible Bid (slots × base − purse):</span>
-                      <span
-                        className={`val ${ts.maxPossibleBidDisplay < 0 ? 'budget-over' : 'max-bid-val'}`}
-                      >
-                        {ts.maxPossibleBidDisplay < 0 ? '−' : ''}
+                      <span className={`val ${ts.maxBid > 0 ? 'max-bid-val' : 'budget-over'}`}>
                         {'\u20B9'}
-                        {Math.abs(ts.maxPossibleBidDisplay).toLocaleString()}
+                        {ts.maxBid.toLocaleString()}
                       </span>
-                      {ts.maxPossibleBidDisplay < 0 && (
-                        <span className="summary-hint budget-over">
-                          Short {'\u20B9'}
-                          {Math.abs(ts.maxPossibleBidDisplay).toLocaleString()} to fill {' '}
-                          {ts.remainingPlayersNeeded} open slot
-                          {ts.remainingPlayersNeeded !== 1 ? 's' : ''} at {'\u20B9'}
-                          {playerBasePrice.toLocaleString()} each.
-                        </span>
-                      )}
-                      {ts.maxBid > 0 && (
-                        <span className="summary-hint">
-                          Next pick max (≥ base): {'\u20B9'}
-                          {ts.maxBid.toLocaleString()}
-                        </span>
-                      )}
-                      {ts.maxBid <= 0 && ts.remainingPlayersNeeded > 0 && (
-                        <span className="summary-hint budget-over">
-                          No valid next bid at base — reduce spend or raise budget.
-                        </span>
-                      )}
                     </div>
                   </div>
 
