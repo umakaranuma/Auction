@@ -8,6 +8,7 @@ class Tournament(models.Model):
     club_logo = models.URLField(max_length=500, blank=True, null=True)
     team_total_budget = models.IntegerField(default=1000)
     max_players_per_team = models.IntegerField(default=15)
+    player_base_price = models.IntegerField(default=10)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

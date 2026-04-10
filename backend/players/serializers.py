@@ -69,7 +69,7 @@ class TournamentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'year', 'club_name',
             'club_logo', 'club_logo_url', 'team_total_budget', 'max_players_per_team',
-            'player_count', 'team_count', 'created_at',
+            'player_base_price', 'player_count', 'team_count', 'created_at',
         ]
 
     def create(self, validated_data):

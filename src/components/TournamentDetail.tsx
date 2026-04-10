@@ -41,6 +41,7 @@ interface TournamentDetailProps {
   clubLogoSrc: string | null;
   teamTotalBudget: number;
   maxPlayersPerTeam: number;
+  playerBasePrice: number;
   onBack: () => void;
   onEdit?: () => void;
 }
@@ -67,6 +68,7 @@ export default function TournamentDetail({
   clubLogoSrc,
   teamTotalBudget,
   maxPlayersPerTeam,
+  playerBasePrice,
   onBack,
   onEdit,
 }: TournamentDetailProps) {
@@ -861,6 +863,7 @@ export default function TournamentDetail({
           teams={teams}
           teamTotalBudget={teamTotalBudget}
           maxPlayersPerTeam={maxPlayersPerTeam}
+          playerBasePrice={playerBasePrice}
           onUpdateStatus={handleUpdateStatus}
           onResetAuction={handleResetAuction}
           onRefreshPlayers={fetchPlayers}

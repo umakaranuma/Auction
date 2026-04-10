@@ -6,6 +6,7 @@ export interface TournamentInfo {
   clubName: string;
   teamTotalBudget: number;
   maxPlayersPerTeam: number;
+  playerBasePrice: number;
 }
 
 export interface PlayerCardState extends TournamentInfo {

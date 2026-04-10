@@ -60,6 +60,10 @@ export default function TournamentSetup({ tournament, setTournament, onContinue,
               <label>Max Players per Team</label>
               <input type="number" name="maxPlayersPerTeam" value={tournament.maxPlayersPerTeam} placeholder="e.g. 15" onChange={handleInput} />
             </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Player Base Price</label>
+              <input type="number" name="playerBasePrice" value={tournament.playerBasePrice} placeholder="e.g. 10" onChange={handleInput} />
+            </div>
           </div>
           <div className="form-group">
             <label>Club / Team Logo</label>

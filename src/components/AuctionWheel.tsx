@@ -38,6 +38,7 @@ interface AuctionWheelProps {
   teams: TeamFromAPI[];
   teamTotalBudget: number;
   maxPlayersPerTeam: number;
+  playerBasePrice: number;
   onUpdateStatus: (
     playerId: number,
     status: 'sold' | 'unsold',
@@ -60,6 +61,7 @@ export default function AuctionWheel({
   teams,
   teamTotalBudget,
   maxPlayersPerTeam,
+  playerBasePrice,
   onUpdateStatus,
   onResetAuction,
   onRefreshPlayers,
@@ -72,6 +74,7 @@ export default function AuctionWheel({
   const [soldTo, setSoldTo] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [roundCompleteMsg, setRoundCompleteMsg] = useState<string | null>(null);
+  const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
 
   // Compute which players are eligible for the current round
   const round1Players = players.filter((p) => p.auction_status === 'pending');
@@ -86,12 +89,23 @@ export default function AuctionWheel({
     const teamPlayers = soldPlayers.filter((p) => p.sold_to === team.name);
     const spent = teamPlayers.reduce((sum, p) => sum + (Number(p.sold_price) || 0), 0);
     const count = teamPlayers.length;
+    const remainingBudget = teamTotalBudget - spent;
+    const remainingPlayersNeeded = Math.max(0, maxPlayersPerTeam - count);
+    
+    // Max bid is what they can spend on ONE player while still having enough for others
+    // Formula: Remaining Budget - ((slots needed - 1) * Base Price)
+    const maxBid = remainingPlayersNeeded > 0 
+      ? remainingBudget - ((remainingPlayersNeeded - 1) * playerBasePrice)
+      : 0;
+
     return {
       ...team,
       spent,
-      remainingBudget: teamTotalBudget - spent,
+      remainingBudget,
       count,
-      remainingPlayersNeeded: Math.max(0, maxPlayersPerTeam - count),
+      remainingPlayersNeeded,
+      maxBid,
+      acquiredPlayers: teamPlayers,
     };
   });
 
@@ -112,7 +126,7 @@ export default function AuctionWheel({
   const handleSpin = () => {
     if (spinning || eligiblePlayers.length === 0) return;
     setSelectedPlayer(null);
-    setSoldPrice('');
+    setSoldPrice(String(playerBasePrice));
     setSoldTo('');
     setRoundCompleteMsg(null);
     setSpinning(true);
@@ -141,6 +155,7 @@ export default function AuctionWheel({
       soldTo || undefined
     );
     setSelectedPlayer(null);
+    setSoldPrice(String(playerBasePrice));
     setAuctionView('wheel');
     setStatusUpdating(false);
   };
@@ -239,27 +254,57 @@ export default function AuctionWheel({
         </button>
       </div>
 
-      {/* Team Stats Panel */}
       <div className="auction-team-stats">
-        <h3 className="auction-team-stats-title">Team Standings (Budget: ₹{teamTotalBudget.toLocaleString()} · Max: {maxPlayersPerTeam})</h3>
+        <h3 className="auction-team-stats-title">
+          Team Standings (Base: ₹{playerBasePrice.toLocaleString()} · Budget: ₹{teamTotalBudget.toLocaleString()} · Max Slots: {maxPlayersPerTeam})
+        </h3>
         <div className="auction-team-stats-grid">
           {teamStats.map(ts => (
-            <div key={ts.id} className="team-stat-card">
-              <div className="team-stat-logo">
-                {ts.logo_url ? <img src={ts.logo_url} alt={ts.name} /> : <span>{ts.name.charAt(0)}</span>}
-              </div>
-              <div className="team-stat-info">
-                <div className="team-stat-name">{ts.name}</div>
-                <div className="team-stat-details">
-                  <span className={ts.remainingBudget < 0 ? 'budget-over' : 'budget-ok'}>
-                    rem: ₹{ts.remainingBudget.toLocaleString()}
-                  </span>
-                  {' · '}
-                  <span className={ts.remainingPlayersNeeded <= 0 ? 'roster-full' : 'roster-ok'}>
-                    needs: {ts.remainingPlayersNeeded} ({ts.count}/{maxPlayersPerTeam})
-                  </span>
+            <div key={ts.id} className={`team-stat-card ${expandedTeamId === ts.id ? 'expanded' : ''}`} onClick={() => setExpandedTeamId(expandedTeamId === ts.id ? null : ts.id)}>
+              <div className="team-stat-main">
+                <div className="team-stat-logo">
+                  {ts.logo_url ? <img src={ts.logo_url} alt={ts.name} /> : <span>{ts.name.charAt(0)}</span>}
                 </div>
+                <div className="team-stat-info">
+                  <div className="team-stat-name">{ts.name}</div>
+                  <div className="team-stat-details">
+                    <span className={ts.remainingBudget < playerBasePrice ? 'budget-over' : 'budget-ok'}>
+                      Bal: ₹{ts.remainingBudget.toLocaleString()}
+                    </span>
+                    {' · '}
+                    <span className={ts.remainingPlayersNeeded <= 0 ? 'roster-full' : 'roster-ok'}>
+                      Slots: {ts.count}/{maxPlayersPerTeam}
+                    </span>
+                  </div>
+                  <div className="team-stat-max-bid">
+                    Max Bid Possible: <span className="max-bid-val">₹{ts.maxBid.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="team-expand-icon">{expandedTeamId === ts.id ? '🔼' : '🔽'}</div>
               </div>
+              
+              {expandedTeamId === ts.id && (
+                <div className="team-acquired-list" onClick={(e) => e.stopPropagation()}>
+                  <div className="acquired-list-header">Acquired Players ({ts.count})</div>
+                  {ts.acquiredPlayers.length > 0 ? (
+                    <div className="acquired-grid">
+                      {ts.acquiredPlayers.map(ap => (
+                        <div key={ap.id} className="acquired-item">
+                          <div className="acquired-photo">
+                            {ap.photo_url ? <img src={ap.photo_url} alt={ap.name} /> : <span>{ap.name.charAt(0)}</span>}
+                          </div>
+                          <div className="acquired-meta">
+                            <div className="acquired-name">{ap.name}</div>
+                            <div className="acquired-price">₹{Number(ap.sold_price).toLocaleString()}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="acquired-empty">No players acquired yet</div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

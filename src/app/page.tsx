@@ -17,6 +17,7 @@ interface SelectedTournament {
   club_logo_url: string | null;
   team_total_budget?: number;
   max_players_per_team?: number;
+  player_base_price?: number;
 }
 
 export default function Home() {
@@ -31,6 +32,7 @@ export default function Home() {
     clubName: '',
     teamTotalBudget: 1000,
     maxPlayersPerTeam: 15,
+    playerBasePrice: 10,
   });
 
   const [saving, setSaving] = useState(false);
@@ -44,6 +46,7 @@ export default function Home() {
     club_logo_url: string | null;
     team_total_budget: number;
     max_players_per_team: number;
+    player_base_price: number;
   }) => {
     setSelectedTournament(t);
     setTournament({
@@ -54,6 +57,7 @@ export default function Home() {
       clubName: t.club_name,
       teamTotalBudget: t.team_total_budget,
       maxPlayersPerTeam: t.max_players_per_team,
+      playerBasePrice: t.player_base_price,
     });
     setView('detail');
   };
@@ -68,6 +72,7 @@ export default function Home() {
       clubName: '',
       teamTotalBudget: 1000,
       maxPlayersPerTeam: 15,
+      playerBasePrice: 10,
     });
     setSelectedTournament(null);
     setView('setup');
@@ -83,6 +88,7 @@ export default function Home() {
         club_logo: tournament.clubLogoFile,
         team_total_budget: tournament.teamTotalBudget,
         max_players_per_team: tournament.maxPlayersPerTeam,
+        player_base_price: tournament.playerBasePrice,
       });
       setSelectedTournament({
         id: result.id,
@@ -92,6 +98,7 @@ export default function Home() {
         club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
         team_total_budget: result.team_total_budget,
         max_players_per_team: result.max_players_per_team,
+        player_base_price: result.player_base_price,
       });
       setView('detail');
     } catch (error) {
@@ -118,6 +125,7 @@ export default function Home() {
         club_logo: tournament.clubLogoFile,
         team_total_budget: tournament.teamTotalBudget,
         max_players_per_team: tournament.maxPlayersPerTeam,
+        player_base_price: tournament.playerBasePrice,
       });
       setSelectedTournament({
         ...selectedTournament,
@@ -127,6 +135,7 @@ export default function Home() {
         club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
         team_total_budget: result.team_total_budget,
         max_players_per_team: result.max_players_per_team,
+        player_base_price: result.player_base_price,
       });
       setView('detail');
     } catch (error) {
@@ -207,6 +216,7 @@ export default function Home() {
           clubLogoSrc={selectedTournament.club_logo_url}
           teamTotalBudget={selectedTournament.team_total_budget || 1000}
           maxPlayersPerTeam={selectedTournament.max_players_per_team || 15}
+          playerBasePrice={selectedTournament.player_base_price || 10}
           onBack={handleBackToPicker}
           onEdit={handleEditTournament}
         />
