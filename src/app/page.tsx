@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../components/Header';
-import TournamentPicker from '../components/TournamentPicker';
+import TournamentPicker, { type TournamentFromAPI } from '../components/TournamentPicker';
 import TournamentSetup from '../components/TournamentSetup';
 import TournamentDetail from '../components/TournamentDetail';
 import { TournamentInfo } from '../types';
@@ -38,17 +38,18 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
 
   // Handle picking an existing tournament
-  const handlePickTournament = (t: {
-    id: number;
-    name: string;
-    year: string;
-    club_name: string;
-    club_logo_url: string | null;
-    team_total_budget: number;
-    max_players_per_team: number;
-    player_base_price: number;
-  }) => {
-    setSelectedTournament(t);
+  const handlePickTournament = (t: TournamentFromAPI) => {
+    const playerBasePrice = t.player_base_price ?? 10;
+    setSelectedTournament({
+      id: t.id,
+      name: t.name,
+      year: t.year,
+      club_name: t.club_name,
+      club_logo_url: t.club_logo_url,
+      team_total_budget: t.team_total_budget,
+      max_players_per_team: t.max_players_per_team,
+      player_base_price: playerBasePrice,
+    });
     setTournament({
       tournamentName: t.name,
       tournamentYear: t.year,
@@ -57,7 +58,7 @@ export default function Home() {
       clubName: t.club_name,
       teamTotalBudget: t.team_total_budget,
       maxPlayersPerTeam: t.max_players_per_team,
-      playerBasePrice: t.player_base_price,
+      playerBasePrice,
     });
     setView('detail');
   };

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTournaments } from '../lib/api';
 
-interface TournamentFromAPI {
+export interface TournamentFromAPI {
   id: number;
   name: string;
   year: string;
@@ -10,6 +10,8 @@ interface TournamentFromAPI {
   club_logo_url: string | null;
   team_total_budget: number;
   max_players_per_team: number;
+  /** Present on list/detail from API when supported; default in UI if omitted */
+  player_base_price?: number;
   player_count: number;
   created_at: string;
 }

@@ -116,6 +116,7 @@ export default function TournamentDetail({
     clubName,
     teamTotalBudget,
     maxPlayersPerTeam,
+    playerBasePrice,
   };
 
   const [state, setState] = useState<PlayerCardState>({
@@ -449,6 +450,7 @@ export default function TournamentDetail({
         roles: viewerPlayer.role ? [viewerPlayer.role] : [],
         teamTotalBudget,
         maxPlayersPerTeam,
+        playerBasePrice,
       }
     : null;
 
