@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import Header from '../components/Header';
 import TournamentPicker, { type TournamentFromAPI } from '../components/TournamentPicker';
 import TournamentSetup from '../components/TournamentSetup';
@@ -8,6 +8,9 @@ import { TournamentInfo } from '../types';
 import { createTournament, updateTournament } from '../lib/api';
 
 type AppView = 'picker' | 'setup' | 'detail' | 'edit';
+const AUTH_STORAGE_KEY = 'ecricket_static_auth';
+const STATIC_LOGIN_EMAIL = 'ultron@gmail.cm';
+const STATIC_LOGIN_PASSWORD = 'umaultron1126';
 
 interface SelectedTournament {
   id: number;
@@ -22,6 +25,11 @@ interface SelectedTournament {
 }
 
 export default function Home() {
+  const [authReady, setAuthReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [view, setView] = useState<AppView>('picker');
   const [selectedTournament, setSelectedTournament] = useState<SelectedTournament | null>(null);
 
@@ -39,6 +47,24 @@ export default function Home() {
   });
 
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const loggedIn = localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
+    setIsAuthenticated(loggedIn);
+    setAuthReady(true);
+  }, []);
+
+  const handleLogin = (e: FormEvent) => {
+    e.preventDefault();
+    const email = loginEmail.trim();
+    if (email === STATIC_LOGIN_EMAIL && loginPassword === STATIC_LOGIN_PASSWORD) {
+      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+      setIsAuthenticated(true);
+      setLoginError('');
+      return;
+    }
+    setLoginError('Invalid email or password');
+  };
 
   // Handle picking an existing tournament
   const handlePickTournament = (t: TournamentFromAPI) => {
@@ -200,6 +226,61 @@ export default function Home() {
     setView('picker');
     setSelectedTournament(null);
   };
+
+  if (!authReady) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header />
+        <div className="login-screen">
+          <form className="login-card" onSubmit={handleLogin}>
+            <div className="login-badge">🏏 E-CRICKET ACCESS</div>
+            <div className="login-title">Welcome Back</div>
+            <p className="login-subtitle">Sign in to continue to tournament management</p>
+
+            <div className="form-group">
+              <label>Email</label>
+              <div className="login-input-wrap">
+                <span className="login-input-icon">✉️</span>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="ultron@gmail.cm"
+                autoComplete="username"
+                required
+              />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Password</label>
+              <div className="login-input-wrap">
+                <span className="login-input-icon">🔒</span>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••••••"
+                autoComplete="current-password"
+                required
+              />
+              </div>
+            </div>
+
+            {loginError && <div className="login-error">{loginError}</div>}
+
+            <button className="gen-btn login-btn" type="submit">
+              🔐 LOGIN
+            </button>
+          </form>
+        </div>
+      </>
+    );
+  }
 
   // ── VIEW: Tournament Picker (Home) ──
   if (view === 'picker') {
