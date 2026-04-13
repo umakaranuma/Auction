@@ -14,6 +14,7 @@ type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 interface PlayerFromAPI {
   id: number;
   name: string;
+  club?: string | null;
   photo_url: string | null;
   jersey_number: string;
   age: string;
@@ -53,6 +54,7 @@ const defaultPlayerFields = {
   playerPhotoSrc: null as string | null,
   playerPhotoFile: null as File | null,
   playerName: '',
+  playerClub: '',
   jerseyNumber: '',
   playerAge: '',
   playerPhone: '',
@@ -196,6 +198,7 @@ export default function TournamentDetail({
         const playerData = {
           tournament: tournamentId,
           name: state.playerName,
+          club: state.playerClub,
           photo: state.playerPhotoFile,
           jersey_number: state.jerseyNumber,
           age: state.playerAge,
@@ -229,6 +232,7 @@ export default function TournamentDetail({
     setState({
       ...tournament,
       playerName: p.name,
+      playerClub: p.club || '',
       playerPhotoSrc: p.photo_url,
       playerPhotoFile: null,
       jerseyNumber: p.jersey_number,
@@ -473,6 +477,7 @@ export default function TournamentDetail({
       playerPhotoSrc: player.photo_url,
       playerPhotoFile: null,
       playerName: player.name,
+      playerClub: player.club || '',
       jerseyNumber: player.jersey_number,
       playerAge: player.age,
       playerPhone: player.phone,

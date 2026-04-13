@@ -435,6 +435,15 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   margin-bottom: 8px;
   text-shadow: 0 2px 15px rgba(0,212,255,0.2);
 }
+.card-player-club {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.72);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
 
 /* Role tags on card */
 .card-role-tags {

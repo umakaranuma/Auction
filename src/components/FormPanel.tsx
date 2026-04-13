@@ -75,6 +75,10 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
               <input type="text" name="playerName" value={state.playerName} placeholder="e.g. Virat Kohli" onChange={handleInput} />
             </div>
             <div className="form-group">
+              <label>Club</label>
+              <input type="text" name="playerClub" value={state.playerClub} placeholder="e.g. Uduppiddy Youth SC" onChange={handleInput} />
+            </div>
+            <div className="form-group">
               <label>Jersey Number</label>
               <input type="number" name="jerseyNumber" value={state.jerseyNumber} placeholder="18" min="1" max="99" onChange={handleInput} />
             </div>

@@ -1,6 +1,6 @@
 const API_BASE =
-  'https://auction-backend-ftsw.vercel.app/api';
-  // 'http://127.0.0.1:8000/api';
+  // 'https://auction-backend-ftsw.vercel.app/api';
+  'http://127.0.0.1:8000/api';
 
 // ── Tournament API ─────────────────────────
 
@@ -169,6 +169,7 @@ export async function deleteTeam(id: number) {
 export async function createPlayer(data: {
   tournament: number;
   name: string;
+  club?: string;
   photo?: File | null;
   jersey_number: string;
   age: string;
@@ -181,6 +182,9 @@ export async function createPlayer(data: {
   const formData = new FormData();
   formData.append('tournament', String(data.tournament));
   formData.append('name', data.name);
+  if (data.club !== undefined) {
+    formData.append('club', data.club);
+  }
   if (data.photo) {
     formData.append('photo', data.photo);
   }
@@ -221,6 +225,7 @@ export async function deletePlayer(id: number) {
 
 export async function updatePlayer(id: number, data: {
   name?: string;
+  club?: string;
   photo?: File | null;
   jersey_number?: string;
   age?: string;
@@ -232,6 +237,7 @@ export async function updatePlayer(id: number, data: {
 }) {
   const formData = new FormData();
   if (data.name !== undefined) formData.append('name', data.name);
+  if (data.club !== undefined) formData.append('club', data.club);
   if (data.photo) formData.append('photo', data.photo);
   if (data.jersey_number !== undefined) formData.append('jersey_number', data.jersey_number);
   if (data.age !== undefined) formData.append('age', data.age);
