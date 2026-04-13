@@ -50,6 +50,7 @@ interface TournamentDetailProps {
 const defaultPlayerFields = {
   playerPhotoSrc: null as string | null,
   playerPhotoFile: null as File | null,
+  playerPhotoBackgroundRemoved: false,
   playerName: '',
   jerseyNumber: '',
   playerAge: '',
@@ -200,6 +201,7 @@ export default function TournamentDetail({
       playerName: p.name,
       playerPhotoSrc: p.photo_url,
       playerPhotoFile: null,
+      playerPhotoBackgroundRemoved: false,
       jerseyNumber: p.jersey_number,
       playerAge: p.age,
       playerPhone: p.phone,
@@ -441,6 +443,7 @@ export default function TournamentDetail({
         clubName,
         playerPhotoSrc: viewerPlayer.photo_url,
         playerPhotoFile: null,
+        playerPhotoBackgroundRemoved: false,
         playerName: viewerPlayer.name,
         jerseyNumber: viewerPlayer.jersey_number,
         playerAge: viewerPlayer.age,

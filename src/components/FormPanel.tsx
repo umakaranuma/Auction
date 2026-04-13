@@ -1,7 +1,8 @@
 'use client';
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useCallback, useRef, useState } from 'react';
 import { PlayerCardState, TournamentInfo } from '../types';
 import { roleShowsBowling } from '../lib/playerRole';
+import { removePlayerPhotoBackground, blobToDataUrl } from '../lib/removePlayerPhotoBackground';
 
 interface FormPanelProps {
   state: PlayerCardState;
@@ -16,21 +17,82 @@ interface FormPanelProps {
 }
 
 export default function FormPanel({ state, setState, tournament, onGenerate, onEditTournament, onNewPlayer, showCard, saving, isEdit }: FormPanelProps) {
+  const [removeBgEnabled, setRemoveBgEnabled] = useState(true);
+  const [photoWorking, setPhotoWorking] = useState(false);
+  const [photoStatusLine, setPhotoStatusLine] = useState<string | null>(null);
+  const [photoNote, setPhotoNote] = useState<string | null>(null);
+  const loadGen = useRef(0);
+
   const handleInput = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setState(prev => ({ ...prev, [name]: value }));
   };
 
-  const loadPhoto = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      setState(prev => ({ ...prev, playerPhotoSrc: dataUrl, playerPhotoFile: file }));
+  const loadPhoto = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+      input.value = '';
+      return;
+    }
+    const gen = ++loadGen.current;
+    setPhotoNote(null);
+    setPhotoWorking(true);
+    setPhotoStatusLine(removeBgEnabled ? 'Removing background…' : 'Loading…');
+
+    const applyOriginal = async () => {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result as string);
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(file);
+      });
+      if (gen !== loadGen.current) return;
+      setState((prev) => ({
+        ...prev,
+        playerPhotoSrc: dataUrl,
+        playerPhotoFile: file,
+        playerPhotoBackgroundRemoved: false,
+      }));
     };
-    reader.readAsDataURL(file);
-  };
+
+    try {
+      if (removeBgEnabled) {
+        const blob = await removePlayerPhotoBackground(file, (key, current, total) => {
+          if (gen !== loadGen.current) return;
+          if (total > 0) {
+            const pct = Math.min(100, Math.round((current / total) * 100));
+            setPhotoStatusLine(`${key} ${pct}%`);
+          } else {
+            setPhotoStatusLine(key);
+          }
+        });
+        if (gen !== loadGen.current) return;
+        const dataUrl = await blobToDataUrl(blob);
+        const stem = file.name.replace(/\.[^.]+$/, '') || 'player';
+        const outFile = new File([blob], `${stem}-cutout.png`, { type: 'image/png' });
+        setState((prev) => ({
+          ...prev,
+          playerPhotoSrc: dataUrl,
+          playerPhotoFile: outFile,
+          playerPhotoBackgroundRemoved: true,
+        }));
+      } else {
+        await applyOriginal();
+      }
+    } catch (err) {
+      console.error(err);
+      if (gen !== loadGen.current) return;
+      setPhotoNote('Background removal failed — using your original photo.');
+      await applyOriginal();
+    } finally {
+      if (gen === loadGen.current) {
+        setPhotoWorking(false);
+        setPhotoStatusLine(null);
+        input.value = '';
+      }
+    }
+  }, [removeBgEnabled, setState]);
 
   const selectRole = (role: string) => {
     setState(prev => ({ ...prev, roles: [role] }));
@@ -60,15 +122,38 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
       <div className="section-label">Player Details</div>
       <div className="form-group">
         <label>Player Photo</label>
+        <label className="photo-remove-bg-toggle">
+          <input
+            type="checkbox"
+            checked={removeBgEnabled}
+            disabled={photoWorking}
+            onChange={(ev) => setRemoveBgEnabled(ev.target.checked)}
+          />
+          <span>
+            Remove wall / outdoor background (runs in your browser; first use downloads a small model)
+          </span>
+        </label>
         <div className="photo-upload">
           <label className="photo-preview" htmlFor="photoInput">
             {state.playerPhotoSrc ? (
-              <img src={state.playerPhotoSrc} alt="player" />
+              <img src={state.playerPhotoSrc} alt="player preview" />
             ) : (
               <div className="photo-preview-text">📷<br />Upload<br />Photo</div>
             )}
+            {photoWorking && (
+              <div className="photo-preview-processing">
+                <div className="auction-loading-spinner" />
+                <span>{photoStatusLine ?? '…'}</span>
+              </div>
+            )}
           </label>
-          <input type="file" id="photoInput" accept="image/*" onChange={loadPhoto} />
+          <input
+            type="file"
+            id="photoInput"
+            accept="image/*"
+            disabled={photoWorking}
+            onChange={loadPhoto}
+          />
           <div className="photo-upload-right">
             <div className="form-group">
               <label>Full Name</label>
@@ -80,6 +165,9 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
             </div>
           </div>
         </div>
+        {photoNote && (
+          <p className="photo-upload-note">{photoNote}</p>
+        )}
       </div>
 
       <div className="form-group">
@@ -123,7 +211,7 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
       )}
 
       <div className="form-actions">
-        <button className="gen-btn" onClick={onGenerate} disabled={saving}>
+        <button className="gen-btn" onClick={onGenerate} disabled={saving || photoWorking}>
           {saving ? '⏳ SAVING...' : (isEdit ? '💾 SAVE PLAYER CHANGES' : '⚡ Generate Player Card')}
         </button>
         {showCard && (

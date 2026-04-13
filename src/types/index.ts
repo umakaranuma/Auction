@@ -12,6 +12,8 @@ export interface TournamentInfo {
 export interface PlayerCardState extends TournamentInfo {
   playerPhotoSrc: string | null;
   playerPhotoFile: File | null;
+  /** True when the portrait was processed with background removal (use cutout layout on card). */
+  playerPhotoBackgroundRemoved: boolean;
   playerName: string;
   jerseyNumber: string;
   playerAge: string;

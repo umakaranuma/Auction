@@ -376,6 +376,7 @@ export default function AuctionWheel({
         clubName,
         playerPhotoSrc: selectedPlayer.photo_url,
         playerPhotoFile: null,
+        playerPhotoBackgroundRemoved: false,
         playerName: selectedPlayer.name,
         jerseyNumber: selectedPlayer.jersey_number,
         playerAge: selectedPlayer.age,

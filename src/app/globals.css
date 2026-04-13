@@ -135,6 +135,45 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   border-radius: 6px;
 }
 .photo-preview-text { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
+.photo-preview-processing {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(6, 12, 24, 0.82);
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: rgba(0, 212, 255, 0.95);
+  line-height: 1.35;
+}
+.photo-remove-bg-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1.35;
+}
+.photo-remove-bg-toggle input {
+  margin-top: 3px;
+  accent-color: var(--cyan);
+  cursor: pointer;
+}
+.photo-upload-note {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: #fbbf24;
+  line-height: 1.35;
+}
 .photo-upload-right { flex: 1; }
 
 /* Logo upload */
@@ -370,6 +409,52 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
+  object-position: top center;
+}
+/* Cutouts from background removal: show full figure, feet near card bottom */
+.card-hero-img.card-hero-img--cutout {
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 22px rgba(0, 212, 255, 0.14));
+}
+.card-hero-cutout-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.card-hero-img--processing-base {
+  opacity: 0.42;
+  filter: blur(2px) brightness(0.75);
+}
+.card-hero-processing-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(4, 14, 28, 0.55);
+  z-index: 1;
+}
+.card-hero-processing-overlay .auction-loading-spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+}
+.card-hero-processing-text {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 212, 255, 0.95);
+  text-align: center;
+  padding: 0 12px;
+  line-height: 1.45;
 }
 .card-hero-placeholder {
   width: 100%;

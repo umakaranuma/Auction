@@ -1,10 +1,14 @@
 'use client';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { PlayerCardState } from '../types';
 import { roleShowsBowling, isWicketKeeperDisplayRole } from '../lib/playerRole';
+import { removePlayerPhotoBackground, blobToDataUrl } from '../lib/removePlayerPhotoBackground';
+import { getCachedPlayerCutout, setCachedPlayerCutout } from '../lib/playerCardCutoutCache';
 
 interface PlayerCardProps {
   state: PlayerCardState;
+  /** When true (default), strip non-cutout photos in the card (API images, originals). */
+  autoRemoveBackground?: boolean;
 }
 
 function drawBurstBackground(canvas: HTMLCanvasElement) {
@@ -109,17 +113,78 @@ function drawBurstBackground(canvas: HTMLCanvasElement) {
   ctx.globalAlpha = 1;
 }
 
-export default function PlayerCard({ state }: PlayerCardProps) {
+export default function PlayerCard({ state, autoRemoveBackground = true }: PlayerCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const primaryRole = state.roles[0];
   const showBowling = roleShowsBowling(primaryRole);
   const battShort = state.battingHand === 'Left Hand' ? 'LH' : 'RH';
+
+  const [heroSrc, setHeroSrc] = useState<string | null>(null);
+  const [heroCutout, setHeroCutout] = useState(false);
+  const [heroWorking, setHeroWorking] = useState(false);
 
   useEffect(() => {
     if (canvasRef.current) {
       drawBurstBackground(canvasRef.current);
     }
   }, []);
+
+  useLayoutEffect(() => {
+    const raw = state.playerPhotoSrc;
+    const alreadyCutout = state.playerPhotoBackgroundRemoved;
+
+    if (!raw) {
+      setHeroSrc(null);
+      setHeroCutout(false);
+      setHeroWorking(false);
+      return;
+    }
+
+    if (!autoRemoveBackground || alreadyCutout) {
+      setHeroSrc(raw);
+      setHeroCutout(alreadyCutout);
+      setHeroWorking(false);
+      return;
+    }
+
+    const cached = getCachedPlayerCutout(raw);
+    if (cached) {
+      setHeroSrc(cached);
+      setHeroCutout(true);
+      setHeroWorking(false);
+      return;
+    }
+
+    let cancelled = false;
+    setHeroWorking(true);
+    setHeroSrc(null);
+
+    void (async () => {
+      try {
+        const res = await fetch(raw);
+        if (!res.ok) throw new Error('fetch photo');
+        const blob = await res.blob();
+        if (cancelled) return;
+        const out = await removePlayerPhotoBackground(blob);
+        const dataUrl = await blobToDataUrl(out);
+        if (cancelled) return;
+        setCachedPlayerCutout(raw, dataUrl);
+        setHeroSrc(dataUrl);
+        setHeroCutout(true);
+      } catch {
+        if (!cancelled) {
+          setHeroSrc(raw);
+          setHeroCutout(false);
+        }
+      } finally {
+        if (!cancelled) setHeroWorking(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state.playerPhotoSrc, state.playerPhotoBackgroundRemoved, autoRemoveBackground]);
 
   return (
     <div className="player-card" id="player-card">
@@ -150,19 +215,36 @@ export default function PlayerCard({ state }: PlayerCardProps) {
         </div>
       </div>
 
-      {/* Hero player image */}
+      {/* Hero player image — auto cutout for API / non-processed photos */}
       <div className="card-hero-area">
-        {state.playerPhotoSrc ? (
-          <div
-            className="card-hero-img"
-            style={{
-              backgroundImage: `url(${state.playerPhotoSrc})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'top center',
-            }}
-          />
-        ) : (
+        {!state.playerPhotoSrc ? (
           <div className="card-hero-placeholder">🧑</div>
+        ) : heroWorking && !heroSrc ? (
+          <div className="card-hero-cutout-wrap">
+            <img
+              className="card-hero-img card-hero-img--cutout card-hero-img--processing-base"
+              src={state.playerPhotoSrc}
+              alt=""
+              draggable={false}
+            />
+            <div className="card-hero-processing-overlay">
+              <div className="auction-loading-spinner" />
+              <span className="card-hero-processing-text">
+                Preparing portrait…
+                <br />
+                <span style={{ opacity: 0.8, fontSize: '0.52rem', letterSpacing: '0.06em' }}>
+                  Removing background (first load may take a moment)
+                </span>
+              </span>
+            </div>
+          </div>
+        ) : (
+          <img
+            className={`card-hero-img${heroCutout ? ' card-hero-img--cutout' : ''}`}
+            src={heroSrc ?? state.playerPhotoSrc}
+            alt=""
+            draggable={false}
+          />
         )}
       </div>
       <div className="card-hero-gradient" />
