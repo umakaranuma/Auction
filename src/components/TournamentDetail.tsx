@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import FormPanel from './FormPanel';
 import PreviewPanel from './PreviewPanel';
 import AuctionWheel from './AuctionWheel';
@@ -110,6 +111,8 @@ export default function TournamentDetail({
 
   // Player card viewer modal
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [downloadCardState, setDownloadCardState] = useState<PlayerCardState | null>(null);
+  const downloadCardWrapRef = useRef<HTMLDivElement>(null);
 
   const tournament: TournamentInfo = {
     tournamentName,
@@ -458,33 +461,84 @@ export default function TournamentDetail({
     return matchesFilter && matchesSearch;
   });
 
+  const buildCardState = useCallback(
+    (player: PlayerFromAPI): PlayerCardState => ({
+      tournamentName,
+      tournamentYear,
+      clubLogoSrc,
+      clubLogoFile: null,
+      tournamentBannerSrc,
+      tournamentBannerFile: null,
+      clubName,
+      playerPhotoSrc: player.photo_url,
+      playerPhotoFile: null,
+      playerName: player.name,
+      jerseyNumber: player.jersey_number,
+      playerAge: player.age,
+      playerPhone: player.phone,
+      playerNationality: '',
+      battingHand: player.batting_hand,
+      bowlingHand: player.bowling_hand,
+      bowlingStyle: '',
+      roles: player.role ? [player.role] : [],
+      teamTotalBudget,
+      maxPlayersPerTeam,
+      playerBasePrice,
+    }),
+    [
+      tournamentName,
+      tournamentYear,
+      clubLogoSrc,
+      tournamentBannerSrc,
+      clubName,
+      teamTotalBudget,
+      maxPlayersPerTeam,
+      playerBasePrice,
+    ]
+  );
+
   // Build card state for the viewer
   const viewerPlayer = viewerIndex !== null ? filteredPlayers[viewerIndex] : null;
-  const viewerCardState: PlayerCardState | null = viewerPlayer
-    ? {
-        tournamentName,
-        tournamentYear,
-        clubLogoSrc,
-        clubLogoFile: null,
-        tournamentBannerSrc,
-        tournamentBannerFile: null,
-        clubName,
-        playerPhotoSrc: viewerPlayer.photo_url,
-        playerPhotoFile: null,
-        playerName: viewerPlayer.name,
-        jerseyNumber: viewerPlayer.jersey_number,
-        playerAge: viewerPlayer.age,
-        playerPhone: viewerPlayer.phone,
-        playerNationality: '',
-        battingHand: viewerPlayer.batting_hand,
-        bowlingHand: viewerPlayer.bowling_hand,
-        bowlingStyle: '',
-        roles: viewerPlayer.role ? [viewerPlayer.role] : [],
-        teamTotalBudget,
-        maxPlayersPerTeam,
-        playerBasePrice,
-      }
-    : null;
+  const viewerCardState: PlayerCardState | null = viewerPlayer ? buildCardState(viewerPlayer) : null;
+
+  const handleDownloadPlayerCard = async (e: React.MouseEvent, player: PlayerFromAPI) => {
+    e.stopPropagation();
+    const cardState = buildCardState(player);
+    setDownloadCardState(cardState);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+
+    const card = downloadCardWrapRef.current?.querySelector('#player-card') as HTMLElement | null;
+    if (!card) return;
+
+    const images = card.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalHeight > 0) {
+              resolve();
+            } else {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            }
+          })
+      )
+    );
+
+    const canvas = await html2canvas(card, {
+      backgroundColor: null,
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    });
+
+    const link = document.createElement('a');
+    const name = (player.name.trim() || 'player').replace(/\s+/g, '_').toLowerCase();
+    link.download = `player_card_${name}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
 
   const handleOpenViewer = (index: number) => {
     setViewerIndex(index);
@@ -724,6 +778,13 @@ export default function TournamentDetail({
                         ↩️
                       </button>
                     )}
+                    <button
+                      className="player-download-icon-btn"
+                      onClick={(e) => handleDownloadPlayerCard(e, p)}
+                      title="Download Player Card"
+                    >
+                      ⬇️
+                    </button>
                     <div className="player-list-view-icon">👁</div>
                     <button
                       className="player-delete-icon-btn"
@@ -975,6 +1036,15 @@ export default function TournamentDetail({
           </div>
         </div>
       )}
+
+      {/* Off-screen renderer used for list download action */}
+      <div
+        ref={downloadCardWrapRef}
+        aria-hidden="true"
+        style={{ position: 'fixed', left: '-10000px', top: 0, pointerEvents: 'none', opacity: 0 }}
+      >
+        {downloadCardState && <PlayerCard state={downloadCardState} />}
+      </div>
       {/* ── Revert Confirmation Modal ── */}
       {revertPlayer && (
         <div className="confirm-overlay" onClick={handleRevertCancel}>
