@@ -16,6 +16,7 @@ export interface PlayerCardState extends TournamentInfo {
   playerPhotoSrc: string | null;
   playerPhotoFile: File | null;
   playerName: string;
+  playerClub: string;
   jerseyNumber: string;
   playerAge: string;
   playerPhone: string;

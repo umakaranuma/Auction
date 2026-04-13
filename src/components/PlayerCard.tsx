@@ -168,9 +168,11 @@ export default function PlayerCard({ state }: PlayerCardProps) {
 
       {/* Info section (bottom) */}
       <div className="card-info-section">
-        <div className="card-profile-label">PLAYER PROFILE</div>
         <div className="card-player-name">
           {state.playerName ? state.playerName.toUpperCase() : 'PLAYER NAME'}
+        </div>
+        <div className="card-player-club">
+          {state.playerClub ? state.playerClub.toUpperCase() : 'CLUB NAME'}
         </div>
 
         {/* Role tags */}

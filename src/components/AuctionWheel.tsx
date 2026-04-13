@@ -7,6 +7,7 @@ import { PlayerCardState } from '../types';
 interface PlayerFromAPI {
   id: number;
   name: string;
+  club?: string | null;
   photo_url: string | null;
   jersey_number: string;
   age: string;
@@ -381,6 +382,7 @@ export default function AuctionWheel({
         playerPhotoSrc: selectedPlayer.photo_url,
         playerPhotoFile: null,
         playerName: selectedPlayer.name,
+        playerClub: selectedPlayer.club || '',
         jerseyNumber: selectedPlayer.jersey_number,
         playerAge: selectedPlayer.age,
         playerPhone: selectedPlayer.phone,
