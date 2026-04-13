@@ -2279,8 +2279,8 @@ input[type="file"] { display: none; }
 /* Close Button */
 .card-viewer-close {
   position: absolute;
-  top: -50px;
-  right: -10px;
+  top: 0px;
+  right: 10px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -3037,7 +3037,7 @@ input[type="file"] { display: none; }
   .auction-lists-section { padding: 1rem; }
   .card-viewer-content { gap: 0.5rem; }
   .card-viewer-nav { width: 36px; height: 36px; font-size: 1.5rem; }
-  .card-viewer-close { top: -40px; right: 0; width: 34px; height: 34px; font-size: 1rem; }
+  .card-viewer-close { top: 8px; right: 8px; width: 34px; height: 34px; font-size: 1rem; }
   .player-list-view-icon { opacity: 0.3; }
   .teams-grid { grid-template-columns: 1fr; }
   .team-create-form { flex-direction: column; align-items: center; }
