@@ -126,7 +126,7 @@ export default function PlayerCard({ state }: PlayerCardProps) {
       {/* Explosive burst background */}
       <canvas ref={canvasRef} className="card-bg-canvas" width={380} height={560} />
 
-      {/* Tournament badge (top-left) */}
+      {/* Club logo + optional tournament banner (same row) */}
       <div className="card-tournament-badge">
         <div className="card-tournament-logo">
           {state.clubLogoSrc ? (
@@ -144,22 +144,21 @@ export default function PlayerCard({ state }: PlayerCardProps) {
             <span className="card-tournament-logo-text">{state.clubName || 'LOGO'}</span>
           )}
         </div>
-        <div className="card-tournament-text">
-          <div className="card-tournament-name">{state.tournamentName || 'TOURNAMENT'}</div>
-          <div className="card-tournament-year">{state.tournamentYear || '2025'}</div>
-        </div>
+        {state.tournamentBannerSrc ? (
+          <div className="card-tournament-banner">
+            <img src={state.tournamentBannerSrc} alt="" />
+          </div>
+        ) : null}
       </div>
 
       {/* Hero player image */}
       <div className="card-hero-area">
         {state.playerPhotoSrc ? (
-          <div
+          <img
             className="card-hero-img"
-            style={{
-              backgroundImage: `url(${state.playerPhotoSrc})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'top center',
-            }}
+            src={state.playerPhotoSrc}
+            alt=""
+            draggable={false}
           />
         ) : (
           <div className="card-hero-placeholder">🧑</div>

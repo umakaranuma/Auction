@@ -40,6 +40,7 @@ interface TournamentDetailProps {
   tournamentYear: string;
   clubName: string;
   clubLogoSrc: string | null;
+  tournamentBannerSrc: string | null;
   teamTotalBudget: number;
   maxPlayersPerTeam: number;
   playerBasePrice: number;
@@ -67,6 +68,7 @@ export default function TournamentDetail({
   tournamentYear,
   clubName,
   clubLogoSrc,
+  tournamentBannerSrc,
   teamTotalBudget,
   maxPlayersPerTeam,
   playerBasePrice,
@@ -114,6 +116,8 @@ export default function TournamentDetail({
     tournamentYear,
     clubLogoSrc,
     clubLogoFile: null,
+    tournamentBannerSrc,
+    tournamentBannerFile: null,
     clubName,
     teamTotalBudget,
     maxPlayersPerTeam,
@@ -124,6 +128,30 @@ export default function TournamentDetail({
     ...tournament,
     ...defaultPlayerFields,
   });
+
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      tournamentName,
+      tournamentYear,
+      clubLogoSrc,
+      clubName,
+      tournamentBannerSrc,
+      tournamentBannerFile: null,
+      teamTotalBudget,
+      maxPlayersPerTeam,
+      playerBasePrice,
+    }));
+  }, [
+    tournamentName,
+    tournamentYear,
+    clubLogoSrc,
+    clubName,
+    tournamentBannerSrc,
+    teamTotalBudget,
+    maxPlayersPerTeam,
+    playerBasePrice,
+  ]);
 
   // Fetch players
   const fetchPlayers = useCallback(async () => {
@@ -438,6 +466,8 @@ export default function TournamentDetail({
         tournamentYear,
         clubLogoSrc,
         clubLogoFile: null,
+        tournamentBannerSrc,
+        tournamentBannerFile: null,
         clubName,
         playerPhotoSrc: viewerPlayer.photo_url,
         playerPhotoFile: null,
@@ -864,6 +894,7 @@ export default function TournamentDetail({
           tournamentName={tournamentName}
           tournamentYear={tournamentYear}
           clubLogoSrc={clubLogoSrc}
+          tournamentBannerSrc={tournamentBannerSrc}
           clubName={clubName}
           players={players}
           teams={teams}

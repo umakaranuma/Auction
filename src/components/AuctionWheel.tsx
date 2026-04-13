@@ -33,6 +33,7 @@ interface AuctionWheelProps {
   tournamentName: string;
   tournamentYear: string;
   clubLogoSrc: string | null;
+  tournamentBannerSrc: string | null;
   clubName: string;
   players: PlayerFromAPI[];
   teams: TeamFromAPI[];
@@ -56,6 +57,7 @@ export default function AuctionWheel({
   tournamentName,
   tournamentYear,
   clubLogoSrc,
+  tournamentBannerSrc,
   clubName,
   players,
   teams,
@@ -373,6 +375,8 @@ export default function AuctionWheel({
         tournamentYear,
         clubLogoSrc,
         clubLogoFile: null,
+        tournamentBannerSrc,
+        tournamentBannerFile: null,
         clubName,
         playerPhotoSrc: selectedPlayer.photo_url,
         playerPhotoFile: null,

@@ -27,6 +27,17 @@ export default function TournamentSetup({ tournament, setTournament, onContinue,
     reader.readAsDataURL(file);
   };
 
+  const loadBanner = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setTournament(prev => ({ ...prev, tournamentBannerSrc: dataUrl, tournamentBannerFile: file }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const canContinue = tournament.tournamentName.trim().length > 0;
 
   return (
@@ -79,6 +90,22 @@ export default function TournamentSetup({ tournament, setTournament, onContinue,
                 )}
               </label>
               <input type="file" id="setupLogoInput" accept="image/*" onChange={loadLogo} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Tournament banner (player card)</label>
+            <div className="setup-logo-area">
+              <label className="setup-banner-preview" htmlFor="setupBannerInput">
+                {tournament.tournamentBannerSrc ? (
+                  <img src={tournament.tournamentBannerSrc} alt="Tournament banner" />
+                ) : (
+                  <div className="setup-logo-placeholder">
+                    <span>{'\u{1F5BC}'}</span>
+                    <span className="setup-logo-text">Upload banner</span>
+                  </div>
+                )}
+              </label>
+              <input type="file" id="setupBannerInput" accept="image/*" onChange={loadBanner} />
             </div>
           </div>
 

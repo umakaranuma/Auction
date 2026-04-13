@@ -8,6 +8,8 @@ export interface TournamentFromAPI {
   year: string;
   club_name: string;
   club_logo_url: string | null;
+  /** When API supports it — wide branding image for player cards */
+  tournament_banner_url?: string | null;
   team_total_budget: number;
   max_players_per_team: number;
   /** Present on list/detail from API when supported; default in UI if omitted */

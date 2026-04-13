@@ -299,15 +299,18 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   pointer-events: none;
 }
 
-/* Tournament badge (top-left) */
+/* Club logo + banner row (top-left) */
 .card-tournament-badge {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 14px;
+  left: 14px;
+  right: 14px;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  max-width: calc(100% - 28px);
+  pointer-events: none;
 }
 .card-tournament-logo {
   width: 50px;
@@ -321,6 +324,21 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   border: 2px solid rgba(0,212,255,0.3);
   flex-shrink: 0;
 }
+.card-tournament-banner {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-tournament-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
 .card-tournament-logo-text {
   font-size: 0.5rem;
   color: var(--cyan);
@@ -330,30 +348,8 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   letter-spacing: 0;
   line-height: 1.1;
 }
-.card-tournament-text {
-  display: flex;
-  flex-direction: column;
-}
-.card-tournament-name {
-  font-family: var(--font-oswald), sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: rgba(255,255,255,0.9);
-  text-transform: uppercase;
-  line-height: 1.2;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-}
-.card-tournament-year {
-  font-family: var(--font-oswald), sans-serif;
-  font-size: 0.55rem;
-  letter-spacing: 2px;
-  color: rgba(0,212,255,0.7);
-  text-transform: uppercase;
-  font-weight: 500;
-}
 
-/* Hero player image */
+/* Hero player image — full-bleed width (edge to edge) */
 .card-hero-area {
   position: absolute;
   top: 0;
@@ -361,19 +357,24 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   right: 0;
   bottom: 200px;
   z-index: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
   overflow: hidden;
 }
 .card-hero-img {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
+  object-position: top center;
+  /* Avoid flex/subpixel gaps at card edges */
+  min-width: 100%;
+  min-height: 100%;
 }
 .card-hero-placeholder {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -605,6 +606,32 @@ input[type="file"] { display: none; }
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+}
+.setup-banner-preview {
+  width: min(100%, 320px);
+  height: 72px;
+  border: 2px dashed rgba(0, 212, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.3s;
+}
+.setup-banner-preview:hover {
+  border-color: var(--cyan);
+}
+.setup-banner-preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #0a1628;
 }
 .setup-logo-placeholder {
   display: flex;

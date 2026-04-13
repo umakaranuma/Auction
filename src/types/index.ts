@@ -3,6 +3,9 @@ export interface TournamentInfo {
   tournamentYear: string;
   clubLogoSrc: string | null;
   clubLogoFile: File | null;
+  /** Wide branding image (e.g. event title artwork), shown beside the club logo on player cards */
+  tournamentBannerSrc: string | null;
+  tournamentBannerFile: File | null;
   clubName: string;
   teamTotalBudget: number;
   maxPlayersPerTeam: number;
