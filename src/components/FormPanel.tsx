@@ -1,6 +1,7 @@
 'use client';
 import React, { ChangeEvent } from 'react';
 import { PlayerCardState, TournamentInfo } from '../types';
+import { roleShowsBowling } from '../lib/playerRole';
 
 interface FormPanelProps {
   state: PlayerCardState;
@@ -89,10 +90,6 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
         <label>Phone Number</label>
         <input type="tel" name="playerPhone" value={state.playerPhone} placeholder="+94 77 123 4567" onChange={handleInput} />
       </div>
-      <div className="form-group">
-        <label>Nationality / Region</label>
-        <input type="text" name="playerNationality" value={state.playerNationality} placeholder="e.g. Sri Lanka" onChange={handleInput} />
-      </div>
 
       <div className="section-label">Batting</div>
       <div className="form-group">
@@ -100,15 +97,6 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
         <div className="hand-row">
           <div className={`hand-btn ${state.battingHand === 'Right Hand' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, battingHand: 'Right Hand' }))}>Right Hand</div>
           <div className={`hand-btn ${state.battingHand === 'Left Hand' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, battingHand: 'Left Hand' }))}>Left Hand</div>
-        </div>
-      </div>
-
-      <div className="section-label">Bowling</div>
-      <div className="form-group">
-        <label>Bowling Hand</label>
-        <div className="hand-row">
-          <div className={`hand-btn ${state.bowlingHand === 'Right Arm' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, bowlingHand: 'Right Arm' }))}>Right Arm</div>
-          <div className={`hand-btn ${state.bowlingHand === 'Left Arm' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, bowlingHand: 'Left Arm' }))}>Left Arm</div>
         </div>
       </div>
 
@@ -120,6 +108,19 @@ export default function FormPanel({ state, setState, tournament, onGenerate, onE
           </div>
         ))}
       </div>
+
+      {roleShowsBowling(state.roles[0]) && (
+        <>
+          <div className="section-label">Bowling</div>
+          <div className="form-group">
+            <label>Bowling Hand</label>
+            <div className="hand-row">
+              <div className={`hand-btn ${state.bowlingHand === 'Right Arm' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, bowlingHand: 'Right Arm' }))}>Right Arm</div>
+              <div className={`hand-btn ${state.bowlingHand === 'Left Arm' ? 'active' : ''}`} onClick={() => setState(prev => ({ ...prev, bowlingHand: 'Left Arm' }))}>Left Arm</div>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="form-actions">
         <button className="gen-btn" onClick={onGenerate} disabled={saving}>

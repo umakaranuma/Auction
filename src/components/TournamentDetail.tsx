@@ -6,6 +6,7 @@ import AuctionWheel from './AuctionWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
 import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, clearPlayers, getTeams, createTeam, updateTeam, deleteTeam, deletePlayer } from '../lib/api';
+import { roleShowsBowling } from '../lib/playerRole';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -160,6 +161,7 @@ export default function TournamentDetail({
     if (state.playerName.trim()) {
       try {
         setSaving(true);
+        const role = state.roles.length > 0 ? state.roles[0] : '';
         const playerData = {
           tournament: tournamentId,
           name: state.playerName,
@@ -167,10 +169,10 @@ export default function TournamentDetail({
           jersey_number: state.jerseyNumber,
           age: state.playerAge,
           phone: state.playerPhone,
-          nationality: state.playerNationality,
+          nationality: '',
           batting_hand: state.battingHand,
-          bowling_hand: state.bowlingHand,
-          role: state.roles.length > 0 ? state.roles[0] : '',
+          bowling_hand: roleShowsBowling(role) ? state.bowlingHand : '',
+          role,
         };
 
         if (editingPlayerId) {
@@ -201,7 +203,7 @@ export default function TournamentDetail({
       jerseyNumber: p.jersey_number,
       playerAge: p.age,
       playerPhone: p.phone,
-      playerNationality: p.nationality,
+      playerNationality: '',
       battingHand: p.batting_hand,
       bowlingHand: p.bowling_hand,
       bowlingStyle: '',
@@ -443,7 +445,7 @@ export default function TournamentDetail({
         jerseyNumber: viewerPlayer.jersey_number,
         playerAge: viewerPlayer.age,
         playerPhone: viewerPlayer.phone,
-        playerNationality: viewerPlayer.nationality,
+        playerNationality: '',
         battingHand: viewerPlayer.batting_hand,
         bowlingHand: viewerPlayer.bowling_hand,
         bowlingStyle: '',

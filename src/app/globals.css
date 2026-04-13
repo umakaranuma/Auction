@@ -457,12 +457,15 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   color: #ff8a93;
 }
 
-/* Stats grid (4 boxes) */
+/* Stats grid (4 boxes, or 3 when bowling hidden) */
 .card-stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   width: 100%;
+}
+.card-stats-row.card-stats-row--three {
+  grid-template-columns: repeat(3, 1fr);
 }
 .stat-box {
   background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(0,100,180,0.08) 100%);

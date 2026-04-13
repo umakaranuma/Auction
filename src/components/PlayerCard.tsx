@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
 import { PlayerCardState } from '../types';
+import { roleShowsBowling, isWicketKeeperDisplayRole } from '../lib/playerRole';
 
 interface PlayerCardProps {
   state: PlayerCardState;
@@ -110,8 +111,9 @@ function drawBurstBackground(canvas: HTMLCanvasElement) {
 
 export default function PlayerCard({ state }: PlayerCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const primaryRole = state.roles[0];
+  const showBowling = roleShowsBowling(primaryRole);
   const battShort = state.battingHand === 'Left Hand' ? 'LH' : 'RH';
-  const bowlShort = state.bowlingHand === 'Left Arm' ? 'LA' : 'RA';
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -176,23 +178,25 @@ export default function PlayerCard({ state }: PlayerCardProps) {
         {state.roles.length > 0 && (
           <div className="card-role-tags">
             {state.roles.map(role => (
-              <span key={role} className={`card-role-tag ${role === 'Wicket-Keeper' ? 'red' : ''}`}>
+              <span key={role} className={`card-role-tag ${isWicketKeeperDisplayRole(role) ? 'red' : ''}`}>
                 {role}
               </span>
             ))}
           </div>
         )}
 
-        {/* Stats grid - 4 boxes */}
-        <div className="card-stats-row">
+        {/* Stats grid — bowling omitted for Batsman / Wicket Keeper */}
+        <div className={`card-stats-row${showBowling ? '' : ' card-stats-row--three'}`}>
           <div className="stat-box">
             <div className="stat-box-label">BATTING</div>
             <div className="stat-box-value">{battShort}</div>
           </div>
-          <div className="stat-box">
-            <div className="stat-box-label">BOWLING</div>
-            <div className="stat-box-value">{bowlShort}</div>
-          </div>
+          {showBowling && (
+            <div className="stat-box">
+              <div className="stat-box-label">BOWLING</div>
+              <div className="stat-box-value">{state.bowlingHand === 'Left Arm' ? 'LA' : 'RA'}</div>
+            </div>
+          )}
           <div className="stat-box">
             <div className="stat-box-label">JERSEY</div>
             <div className="stat-box-value">{state.jerseyNumber ? `#${state.jerseyNumber}` : '—'}</div>

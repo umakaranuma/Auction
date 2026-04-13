@@ -380,7 +380,7 @@ export default function AuctionWheel({
         jerseyNumber: selectedPlayer.jersey_number,
         playerAge: selectedPlayer.age,
         playerPhone: selectedPlayer.phone,
-        playerNationality: selectedPlayer.nationality,
+        playerNationality: '',
         battingHand: selectedPlayer.batting_hand,
         bowlingHand: selectedPlayer.bowling_hand,
         bowlingStyle: '',
