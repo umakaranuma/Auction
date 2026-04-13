@@ -6,6 +6,7 @@ import AuctionWheel from './AuctionWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
 import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, clearPlayers, getTeams, createTeam, updateTeam, deleteTeam, deletePlayer } from '../lib/api';
+import { roleShowsBowling } from '../lib/playerRole';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -39,6 +40,7 @@ interface TournamentDetailProps {
   tournamentYear: string;
   clubName: string;
   clubLogoSrc: string | null;
+  tournamentBannerSrc: string | null;
   teamTotalBudget: number;
   maxPlayersPerTeam: number;
   playerBasePrice: number;
@@ -66,6 +68,7 @@ export default function TournamentDetail({
   tournamentYear,
   clubName,
   clubLogoSrc,
+  tournamentBannerSrc,
   teamTotalBudget,
   maxPlayersPerTeam,
   playerBasePrice,
@@ -113,6 +116,8 @@ export default function TournamentDetail({
     tournamentYear,
     clubLogoSrc,
     clubLogoFile: null,
+    tournamentBannerSrc,
+    tournamentBannerFile: null,
     clubName,
     teamTotalBudget,
     maxPlayersPerTeam,
@@ -123,6 +128,30 @@ export default function TournamentDetail({
     ...tournament,
     ...defaultPlayerFields,
   });
+
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      tournamentName,
+      tournamentYear,
+      clubLogoSrc,
+      clubName,
+      tournamentBannerSrc,
+      tournamentBannerFile: null,
+      teamTotalBudget,
+      maxPlayersPerTeam,
+      playerBasePrice,
+    }));
+  }, [
+    tournamentName,
+    tournamentYear,
+    clubLogoSrc,
+    clubName,
+    tournamentBannerSrc,
+    teamTotalBudget,
+    maxPlayersPerTeam,
+    playerBasePrice,
+  ]);
 
   // Fetch players
   const fetchPlayers = useCallback(async () => {
@@ -160,6 +189,7 @@ export default function TournamentDetail({
     if (state.playerName.trim()) {
       try {
         setSaving(true);
+        const role = state.roles.length > 0 ? state.roles[0] : '';
         const playerData = {
           tournament: tournamentId,
           name: state.playerName,
@@ -167,10 +197,10 @@ export default function TournamentDetail({
           jersey_number: state.jerseyNumber,
           age: state.playerAge,
           phone: state.playerPhone,
-          nationality: state.playerNationality,
+          nationality: '',
           batting_hand: state.battingHand,
-          bowling_hand: state.bowlingHand,
-          role: state.roles.length > 0 ? state.roles[0] : '',
+          bowling_hand: roleShowsBowling(role) ? state.bowlingHand : '',
+          role,
         };
 
         if (editingPlayerId) {
@@ -201,7 +231,7 @@ export default function TournamentDetail({
       jerseyNumber: p.jersey_number,
       playerAge: p.age,
       playerPhone: p.phone,
-      playerNationality: p.nationality,
+      playerNationality: '',
       battingHand: p.batting_hand,
       bowlingHand: p.bowling_hand,
       bowlingStyle: '',
@@ -436,6 +466,8 @@ export default function TournamentDetail({
         tournamentYear,
         clubLogoSrc,
         clubLogoFile: null,
+        tournamentBannerSrc,
+        tournamentBannerFile: null,
         clubName,
         playerPhotoSrc: viewerPlayer.photo_url,
         playerPhotoFile: null,
@@ -443,7 +475,7 @@ export default function TournamentDetail({
         jerseyNumber: viewerPlayer.jersey_number,
         playerAge: viewerPlayer.age,
         playerPhone: viewerPlayer.phone,
-        playerNationality: viewerPlayer.nationality,
+        playerNationality: '',
         battingHand: viewerPlayer.batting_hand,
         bowlingHand: viewerPlayer.bowling_hand,
         bowlingStyle: '',
@@ -862,6 +894,7 @@ export default function TournamentDetail({
           tournamentName={tournamentName}
           tournamentYear={tournamentYear}
           clubLogoSrc={clubLogoSrc}
+          tournamentBannerSrc={tournamentBannerSrc}
           clubName={clubName}
           players={players}
           teams={teams}

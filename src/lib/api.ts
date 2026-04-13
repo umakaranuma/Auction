@@ -1,6 +1,6 @@
 const API_BASE =
-  'https://auction-backend-ftsw.vercel.app/api';
-  // 'http://127.0.0.1:8000/api';
+  // 'https://auction-backend-ftsw.vercel.app/api';
+  'http://127.0.0.1:8000/api';
 
 // ── Tournament API ─────────────────────────
 
@@ -9,6 +9,7 @@ export async function createTournament(data: {
   year: string;
   club_name: string;
   club_logo?: File | null;
+  tournament_banner?: File | null;
   team_total_budget?: number;
   max_players_per_team?: number;
   player_base_price?: number;
@@ -28,6 +29,9 @@ export async function createTournament(data: {
   }
   if (data.club_logo) {
     formData.append('club_logo', data.club_logo);
+  }
+  if (data.tournament_banner) {
+    formData.append('tournament_banner', data.tournament_banner);
   }
 
   const res = await fetch(`${API_BASE}/tournaments/`, {
@@ -43,6 +47,7 @@ export async function updateTournament(id: number, data: {
   year: string;
   club_name: string;
   club_logo?: File | null;
+  tournament_banner?: File | null;
   team_total_budget?: number;
   max_players_per_team?: number;
   player_base_price?: number;
@@ -62,6 +67,9 @@ export async function updateTournament(id: number, data: {
   }
   if (data.club_logo) {
     formData.append('club_logo', data.club_logo);
+  }
+  if (data.tournament_banner) {
+    formData.append('tournament_banner', data.tournament_banner);
   }
 
   const res = await fetch(`${API_BASE}/tournaments/${id}/`, {

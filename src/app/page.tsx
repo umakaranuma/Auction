@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
 import TournamentPicker, { type TournamentFromAPI } from '../components/TournamentPicker';
 import TournamentSetup from '../components/TournamentSetup';
@@ -15,6 +15,7 @@ interface SelectedTournament {
   year: string;
   club_name: string;
   club_logo_url: string | null;
+  tournament_banner_url: string | null;
   team_total_budget?: number;
   max_players_per_team?: number;
   player_base_price?: number;
@@ -29,6 +30,8 @@ export default function Home() {
     tournamentYear: '',
     clubLogoSrc: null,
     clubLogoFile: null,
+    tournamentBannerSrc: null,
+    tournamentBannerFile: null,
     clubName: '',
     teamTotalBudget: 1000,
     maxPlayersPerTeam: 15,
@@ -46,6 +49,7 @@ export default function Home() {
       year: t.year,
       club_name: t.club_name,
       club_logo_url: t.club_logo_url,
+      tournament_banner_url: t.tournament_banner_url ?? null,
       team_total_budget: t.team_total_budget,
       max_players_per_team: t.max_players_per_team,
       player_base_price: playerBasePrice,
@@ -55,6 +59,8 @@ export default function Home() {
       tournamentYear: t.year,
       clubLogoSrc: t.club_logo_url,
       clubLogoFile: null,
+      tournamentBannerSrc: t.tournament_banner_url ?? null,
+      tournamentBannerFile: null,
       clubName: t.club_name,
       teamTotalBudget: t.team_total_budget,
       maxPlayersPerTeam: t.max_players_per_team,
@@ -70,6 +76,8 @@ export default function Home() {
       tournamentYear: '',
       clubLogoSrc: null,
       clubLogoFile: null,
+      tournamentBannerSrc: null,
+      tournamentBannerFile: null,
       clubName: '',
       teamTotalBudget: 1000,
       maxPlayersPerTeam: 15,
@@ -87,20 +95,33 @@ export default function Home() {
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo: tournament.clubLogoFile,
+        tournament_banner: tournament.tournamentBannerFile,
         team_total_budget: tournament.teamTotalBudget,
         max_players_per_team: tournament.maxPlayersPerTeam,
         player_base_price: tournament.playerBasePrice,
       });
+      const bannerUrl =
+        (result.tournament_banner_url as string | undefined) ??
+        (result.banner_url as string | undefined) ??
+        tournament.tournamentBannerSrc;
       setSelectedTournament({
         id: result.id,
         name: tournament.tournamentName,
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
+        tournament_banner_url: bannerUrl ?? null,
         team_total_budget: result.team_total_budget,
         max_players_per_team: result.max_players_per_team,
         player_base_price: result.player_base_price,
       });
+      setTournament((prev) => ({
+        ...prev,
+        clubLogoSrc: result.club_logo_url || prev.clubLogoSrc,
+        clubLogoFile: null,
+        tournamentBannerSrc: bannerUrl ?? prev.tournamentBannerSrc,
+        tournamentBannerFile: null,
+      }));
       setView('detail');
     } catch (error) {
       console.error('Failed to save tournament:', error);
@@ -112,6 +133,20 @@ export default function Home() {
   };
 
   const handleEditTournament = () => {
+    if (selectedTournament) {
+      setTournament({
+        tournamentName: selectedTournament.name,
+        tournamentYear: selectedTournament.year,
+        clubLogoSrc: selectedTournament.club_logo_url,
+        clubLogoFile: null,
+        tournamentBannerSrc: selectedTournament.tournament_banner_url,
+        tournamentBannerFile: null,
+        clubName: selectedTournament.club_name,
+        teamTotalBudget: selectedTournament.team_total_budget ?? 1000,
+        maxPlayersPerTeam: selectedTournament.max_players_per_team ?? 15,
+        playerBasePrice: selectedTournament.player_base_price ?? 10,
+      });
+    }
     setView('edit');
   };
 
@@ -124,20 +159,34 @@ export default function Home() {
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo: tournament.clubLogoFile,
+        tournament_banner: tournament.tournamentBannerFile,
         team_total_budget: tournament.teamTotalBudget,
         max_players_per_team: tournament.maxPlayersPerTeam,
         player_base_price: tournament.playerBasePrice,
       });
+      const bannerUrl =
+        (result.tournament_banner_url as string | undefined) ??
+        (result.banner_url as string | undefined) ??
+        tournament.tournamentBannerSrc ??
+        selectedTournament.tournament_banner_url;
       setSelectedTournament({
         ...selectedTournament,
         name: tournament.tournamentName,
         year: tournament.tournamentYear,
         club_name: tournament.clubName,
         club_logo_url: result.club_logo_url || tournament.clubLogoSrc,
+        tournament_banner_url: bannerUrl ?? null,
         team_total_budget: result.team_total_budget,
         max_players_per_team: result.max_players_per_team,
         player_base_price: result.player_base_price,
       });
+      setTournament((prev) => ({
+        ...prev,
+        clubLogoSrc: result.club_logo_url || prev.clubLogoSrc,
+        clubLogoFile: null,
+        tournamentBannerSrc: bannerUrl ?? prev.tournamentBannerSrc,
+        tournamentBannerFile: null,
+      }));
       setView('detail');
     } catch (error) {
       console.error('Failed to update tournament:', error);
@@ -215,6 +264,7 @@ export default function Home() {
           tournamentYear={selectedTournament.year}
           clubName={selectedTournament.club_name}
           clubLogoSrc={selectedTournament.club_logo_url}
+          tournamentBannerSrc={selectedTournament.tournament_banner_url}
           teamTotalBudget={selectedTournament.team_total_budget || 1000}
           maxPlayersPerTeam={selectedTournament.max_players_per_team || 15}
           playerBasePrice={selectedTournament.player_base_price || 10}
