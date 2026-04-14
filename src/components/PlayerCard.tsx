@@ -164,7 +164,7 @@ export default function PlayerCard({ state }: PlayerCardProps) {
           <div className="card-hero-placeholder">🧑</div>
         )}
         <div className="card-hero-id-chip" aria-hidden>
-          <span className="card-hero-id-chip-kicker">Registration ID</span>
+          <span className="card-hero-id-chip-kicker">Player ID</span>
           <span className="card-hero-id-chip-value">{state.playerSerial || '—'}</span>
           {!state.playerSerial && (
             <span className="card-hero-id-chip-hint">Assigned after save</span>

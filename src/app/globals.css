@@ -445,7 +445,7 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   margin-bottom: 10px;
 }
 
-/* Player ID — floating chip on hero (readable, sports-ticket style) */
+/* Player ID — same system as .stat-box (gradient, border, top cyan line) */
 .card-hero-id-chip {
   position: absolute;
   bottom: 14px;
@@ -453,61 +453,52 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   z-index: 3;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 70px;
   max-width: calc(100% - 24px);
-  padding: 10px 14px 11px 16px;
-  border-radius: 14px 14px 6px 14px;
-  background: linear-gradient(
-    145deg,
-    rgba(4, 14, 32, 0.88) 0%,
-    rgba(8, 28, 52, 0.82) 100%
-  );
-  border: 1px solid rgba(0, 212, 255, 0.5);
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(0, 0, 0, 0.2) inset,
-    0 0 24px rgba(0, 212, 255, 0.18);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 8px 10px;
+  text-align: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(0,100,180,0.08) 100%);
+  border: 1px solid rgba(0,212,255,0.25);
+  overflow: hidden;
   pointer-events: none;
 }
 .card-hero-id-chip::before {
   content: '';
   position: absolute;
+  top: 0;
   left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, var(--cyan), rgba(0, 212, 255, 0.35));
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.6;
 }
 .card-hero-id-chip-kicker {
-  font-size: 0.48rem;
-  letter-spacing: 2.2px;
+  font-size: 0.5rem;
+  letter-spacing: 1.5px;
+  color: rgba(0,212,255,0.8);
   text-transform: uppercase;
-  color: rgba(0, 212, 255, 0.92);
-  font-weight: 700;
-  padding-left: 8px;
+  font-weight: 600;
+  margin-bottom: 2px;
 }
 .card-hero-id-chip-value {
   font-family: var(--font-oswald), sans-serif;
-  font-size: clamp(1.35rem, 4.2vw, 1.75rem);
-  font-weight: 800;
-  line-height: 1;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
   color: #fff;
-  letter-spacing: 0.06em;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
-  padding-left: 8px;
 }
 .card-hero-id-chip-hint {
-  font-size: 0.5rem;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.45rem;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 500;
-  padding-left: 8px;
-  margin-top: -2px;
+  margin-top: 3px;
+  line-height: 1.2;
+  max-width: 88px;
 }
 
 /* Role tags on card */
