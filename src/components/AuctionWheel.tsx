@@ -383,6 +383,7 @@ export default function AuctionWheel({
         playerPhotoFile: null,
         playerName: selectedPlayer.name,
         playerClub: selectedPlayer.club || '',
+        playerSerial: String(selectedPlayer.id),
         jerseyNumber: selectedPlayer.jersey_number,
         playerAge: selectedPlayer.age,
         playerPhone: selectedPlayer.phone,

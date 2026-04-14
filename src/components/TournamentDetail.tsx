@@ -55,6 +55,7 @@ const defaultPlayerFields = {
   playerPhotoFile: null as File | null,
   playerName: '',
   playerClub: '',
+  playerSerial: '',
   jerseyNumber: '',
   playerAge: '',
   playerPhone: '',
@@ -218,7 +219,11 @@ export default function TournamentDetail({
           await updatePlayer(editingPlayerId, playerData);
           setSaveMessage('✅ Player updated successfully!');
         } else {
-          await createPlayer(playerData);
+          const created = await createPlayer(playerData);
+          const newId = typeof created?.id === 'number' ? created.id : null;
+          if (newId != null) {
+            setState((prev) => ({ ...prev, playerSerial: String(newId) }));
+          }
           setSaveMessage('✅ Player saved successfully!');
         }
         fetchPlayers(); // Refresh players list
@@ -240,6 +245,7 @@ export default function TournamentDetail({
       playerClub: p.club || '',
       playerPhotoSrc: p.photo_url,
       playerPhotoFile: null,
+      playerSerial: String(p.id),
       jerseyNumber: p.jersey_number,
       playerAge: p.age,
       playerPhone: p.phone,
@@ -523,6 +529,7 @@ export default function TournamentDetail({
       playerPhotoFile: null,
       playerName: player.name,
       playerClub: player.club || '',
+      playerSerial: String(player.id),
       jerseyNumber: player.jersey_number,
       playerAge: player.age,
       playerPhone: player.phone,
