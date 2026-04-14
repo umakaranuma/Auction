@@ -1861,6 +1861,11 @@ input[type="file"] { display: none; }
   color: var(--text-muted);
   margin-top: 2px;
 }
+.player-list-serial {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(0, 212, 255, 0.95);
+}
 .player-list-role {
   background: rgba(0,212,255,0.08);
   border: 1px solid rgba(0,212,255,0.15);

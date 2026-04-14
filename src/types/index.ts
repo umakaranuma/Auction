@@ -17,7 +17,7 @@ export interface PlayerCardState extends TournamentInfo {
   playerPhotoFile: File | null;
   playerName: string;
   playerClub: string;
-  /** API player primary key, shown on card */
+  /** Sequential roster no. (01, 02…) by registration order, not raw DB id */
   playerSerial: string;
   jerseyNumber: string;
   playerAge: string;

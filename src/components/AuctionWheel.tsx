@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SpinWheel from './SpinWheel';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState } from '../types';
+import { getPlayerDisplayNumber } from '../lib/playerDisplayNumber';
 
 interface PlayerFromAPI {
   id: number;
@@ -19,6 +20,7 @@ interface PlayerFromAPI {
   auction_status: 'pending' | 'sold' | 'unsold';
   sold_price: number | null;
   sold_to: string;
+  created_at?: string;
 }
 
 interface TeamFromAPI {
@@ -383,7 +385,7 @@ export default function AuctionWheel({
         playerPhotoFile: null,
         playerName: selectedPlayer.name,
         playerClub: selectedPlayer.club || '',
-        playerSerial: String(selectedPlayer.id),
+        playerSerial: getPlayerDisplayNumber(players, selectedPlayer.id),
         jerseyNumber: selectedPlayer.jersey_number,
         playerAge: selectedPlayer.age,
         playerPhone: selectedPlayer.phone,
