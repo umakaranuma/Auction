@@ -91,6 +91,11 @@ export default function TournamentDetail({
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [deletePlayerConfirm, setDeletePlayerConfirm] = useState<PlayerFromAPI | null>(null);
+  const [assignPlayer, setAssignPlayer] = useState<PlayerFromAPI | null>(null);
+  const [assignTeam, setAssignTeam] = useState('');
+  const [assignPoints, setAssignPoints] = useState('');
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignError, setAssignError] = useState('');
 
   // Team creation state
   const [newTeamName, setNewTeamName] = useState('');
@@ -378,6 +383,46 @@ export default function TournamentDetail({
   const handleDeletePlayer = (e: React.MouseEvent, p: PlayerFromAPI) => {
     e.stopPropagation();
     setDeletePlayerConfirm(p);
+  };
+
+  const handleOpenAssignModal = (e: React.MouseEvent, player: PlayerFromAPI) => {
+    e.stopPropagation();
+    setAssignPlayer(player);
+    setAssignTeam(player.sold_to || '');
+    setAssignPoints(player.sold_price ? String(player.sold_price) : '');
+    setAssignError('');
+  };
+
+  const handleCloseAssignModal = () => {
+    if (assignSaving) return;
+    setAssignPlayer(null);
+    setAssignTeam('');
+    setAssignPoints('');
+    setAssignError('');
+  };
+
+  const handleAssignPlayerToTeam = async () => {
+    if (!assignPlayer) return;
+    const points = Number(assignPoints);
+    if (!assignTeam) {
+      setAssignError('Please select a team');
+      return;
+    }
+    if (!Number.isFinite(points) || points <= 0) {
+      setAssignError('Please enter valid points');
+      return;
+    }
+
+    try {
+      setAssignSaving(true);
+      setAssignError('');
+      await handleUpdateStatus(assignPlayer.id, 'sold', points, assignTeam);
+      handleCloseAssignModal();
+    } catch {
+      setAssignError('Failed to assign player. Please try again.');
+    } finally {
+      setAssignSaving(false);
+    }
   };
 
   const confirmDeletePlayer = async () => {
@@ -784,6 +829,13 @@ export default function TournamentDetail({
                       </button>
                     )}
                     <button
+                      className="player-assign-btn"
+                      onClick={(e) => handleOpenAssignModal(e, p)}
+                      title="Assign Player To Team"
+                    >
+                      🏷️
+                    </button>
+                    <button
                       className="player-download-icon-btn"
                       onClick={(e) => handleDownloadPlayerCard(e, p)}
                       title="Download Player Card"
@@ -1181,6 +1233,54 @@ export default function TournamentDetail({
               </button>
               <button className="confirm-ok-btn" style={{ background: '#ff4444' }} onClick={confirmDeletePlayer}>
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick Assign Modal (Players list) ── */}
+      {assignPlayer && (
+        <div className="confirm-overlay" onClick={handleCloseAssignModal}>
+          <div className="confirm-modal assign-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">🏷️</div>
+            <h3 className="confirm-title">Assign Player To Team</h3>
+            <p className="confirm-message">
+              Assign <strong>{assignPlayer.name}</strong> directly from Players list.
+            </p>
+
+            <div className="assign-form">
+              <div className="form-group">
+                <label>Team</label>
+                <select value={assignTeam} onChange={(e) => setAssignTeam(e.target.value)}>
+                  <option value="">Select a team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.name}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Points</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={assignPoints}
+                  onChange={(e) => setAssignPoints(e.target.value)}
+                  placeholder="Enter points"
+                />
+              </div>
+            </div>
+
+            {assignError && <div className="assign-error">{assignError}</div>}
+
+            <div className="confirm-actions">
+              <button className="confirm-cancel-btn" onClick={handleCloseAssignModal} disabled={assignSaving}>
+                Cancel
+              </button>
+              <button className="confirm-ok-btn" onClick={handleAssignPlayerToTeam} disabled={assignSaving}>
+                {assignSaving ? 'Assigning...' : 'Assign Player'}
               </button>
             </div>
           </div>
