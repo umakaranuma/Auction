@@ -858,10 +858,10 @@ export default function TournamentDetail({
                 className={`filter-tab ${playerFilter === f ? 'active' : ''}`}
                 onClick={() => setPlayerFilter(f)}
               >
-                {f === 'all' && '📋 All'}
-                {f === 'pending' && '⏳ Pending'}
-                {f === 'sold' && '✅ Sold'}
-                {f === 'unsold' && '❌ Unsold'}
+                {f === 'all' && `📋 All (${players.length})`}
+                {f === 'pending' && `⏳ Pending (${pendingCount})`}
+                {f === 'sold' && `✅ Sold (${soldCount})`}
+                {f === 'unsold' && `❌ Unsold (${unsoldCount})`}
               </button>
             ))}
           </div>
