@@ -8,6 +8,7 @@ import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
 import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, clearPlayers, getTeams, createTeam, updateTeam, deleteTeam, deletePlayer } from '../lib/api';
 import { roleShowsBowling } from '../lib/playerRole';
+import { getNextPlayerDisplayNumber, getPlayerDisplayNumber } from '../lib/playerDisplayNumber';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -26,6 +27,7 @@ interface PlayerFromAPI {
   auction_status: 'pending' | 'sold' | 'unsold';
   sold_price: number | null;
   sold_to: string;
+  created_at?: string;
 }
 
 interface TeamFromAPI {
@@ -55,6 +57,7 @@ const defaultPlayerFields = {
   playerPhotoFile: null as File | null,
   playerName: '',
   playerClub: '',
+  playerSerial: '',
   jerseyNumber: '',
   playerAge: '',
   playerPhone: '',
@@ -218,7 +221,14 @@ export default function TournamentDetail({
           await updatePlayer(editingPlayerId, playerData);
           setSaveMessage('✅ Player updated successfully!');
         } else {
-          await createPlayer(playerData);
+          const created = await createPlayer(playerData);
+          const newId = typeof created?.id === 'number' ? created.id : null;
+          if (newId != null) {
+            setState((prev) => ({
+              ...prev,
+              playerSerial: getNextPlayerDisplayNumber(players),
+            }));
+          }
           setSaveMessage('✅ Player saved successfully!');
         }
         fetchPlayers(); // Refresh players list
@@ -240,6 +250,7 @@ export default function TournamentDetail({
       playerClub: p.club || '',
       playerPhotoSrc: p.photo_url,
       playerPhotoFile: null,
+      playerSerial: getPlayerDisplayNumber(players, p.id),
       jerseyNumber: p.jersey_number,
       playerAge: p.age,
       playerPhone: p.phone,
@@ -255,7 +266,11 @@ export default function TournamentDetail({
   };
 
   const handleNewPlayer = () => {
-    setState({ ...tournament, ...defaultPlayerFields });
+    setState({
+      ...tournament,
+      ...defaultPlayerFields,
+      playerSerial: getNextPlayerDisplayNumber(players),
+    });
     setEditingPlayerId(null);
     setShowCard(false);
     setSaveMessage(null);
@@ -523,6 +538,7 @@ export default function TournamentDetail({
       playerPhotoFile: null,
       playerName: player.name,
       playerClub: player.club || '',
+      playerSerial: getPlayerDisplayNumber(players, player.id),
       jerseyNumber: player.jersey_number,
       playerAge: player.age,
       playerPhone: player.phone,
@@ -544,6 +560,7 @@ export default function TournamentDetail({
       teamTotalBudget,
       maxPlayersPerTeam,
       playerBasePrice,
+      players,
     ]
   );
 
@@ -665,7 +682,15 @@ export default function TournamentDetail({
         </button>
         <button
           className={`mode-tab ${tab === 'create' ? 'active' : ''}`}
-          onClick={() => setTab('create')}
+          onClick={() => {
+            setTab('create');
+            if (editingPlayerId == null) {
+              setState((s) => ({
+                ...s,
+                playerSerial: getNextPlayerDisplayNumber(players),
+              }));
+            }
+          }}
         >
           ➕ Add Player
         </button>
@@ -791,6 +816,9 @@ export default function TournamentDetail({
                   <div className="player-list-info">
                     <div className="player-list-name">{p.name}</div>
                     <div className="player-list-meta">
+                      <span className="player-list-serial">
+                        No. {getPlayerDisplayNumber(players, p.id)}
+                      </span>
                       {p.jersey_number && <span>#{p.jersey_number}</span>}
                       {p.role && <span className="player-list-role">{p.role}</span>}
                       {p.age && <span>Age: {p.age}</span>}

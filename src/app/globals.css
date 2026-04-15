@@ -445,6 +445,62 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   margin-bottom: 10px;
 }
 
+/* Player ID — same system as .stat-box (gradient, border, top cyan line) */
+.card-hero-id-chip {
+  position: absolute;
+  bottom: 14px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 70px;
+  max-width: calc(100% - 24px);
+  padding: 8px 10px;
+  text-align: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(0,100,180,0.08) 100%);
+  border: 1px solid rgba(0,212,255,0.25);
+  overflow: hidden;
+  pointer-events: none;
+}
+.card-hero-id-chip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.6;
+}
+.card-hero-id-chip-kicker {
+  font-size: 0.5rem;
+  letter-spacing: 1.5px;
+  color: rgba(0,212,255,0.8);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.card-hero-id-chip-value {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+.card-hero-id-chip-hint {
+  font-size: 0.45rem;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  margin-top: 3px;
+  line-height: 1.2;
+  max-width: 88px;
+}
+
 /* Role tags on card */
 .card-role-tags {
   display: flex;
@@ -1804,6 +1860,11 @@ input[type="file"] { display: none; }
   font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 2px;
+}
+.player-list-serial {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(0, 212, 255, 0.95);
 }
 .player-list-role {
   background: rgba(0,212,255,0.08);
