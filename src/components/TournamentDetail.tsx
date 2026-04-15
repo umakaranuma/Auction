@@ -453,9 +453,9 @@ export default function TournamentDetail({
     }
   };
 
-  const handleClearPlayers = () => {
-    setShowClearConfirm(true);
-  };
+  // const handleClearPlayers = () => {
+  //   setShowClearConfirm(true);
+  // };
 
   const confirmClearPlayers = async () => {
     try {
@@ -469,6 +469,69 @@ export default function TournamentDetail({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownloadPlayersExcel = () => {
+    if (players.length === 0) {
+      alert('No players available to download.');
+      return;
+    }
+
+    const toCsvCell = (value: string | number | null | undefined) => {
+      const stringValue = value == null ? '' : String(value);
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'Player No',
+      'Name',
+      'Club',
+      'Jersey Number',
+      'Age',
+      'Phone',
+      'Nationality',
+      'Batting Hand',
+      'Bowling Hand',
+      'Role',
+      'Auction Status',
+      'Sold To',
+      'Sold Price',
+      'Photo URL',
+      'Created At',
+    ];
+
+    const rows = players.map((player) => [
+      getPlayerDisplayNumber(players, player.id),
+      player.name,
+      player.club ?? '',
+      player.jersey_number,
+      player.age,
+      player.phone,
+      player.nationality,
+      player.batting_hand,
+      player.bowling_hand,
+      player.role,
+      player.auction_status,
+      player.sold_to,
+      player.sold_price ?? '',
+      player.photo_url ?? '',
+      player.created_at ?? '',
+    ]);
+
+    const csvContent = [
+      headers.map((header) => toCsvCell(header)).join(','),
+      ...rows.map((row) => row.map((cell) => toCsvCell(cell)).join(',')),
+    ].join('\n');
+
+    // Add BOM so Excel opens UTF-8 text correctly.
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const safeTournamentName = tournamentName.trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase() || 'tournament';
+    link.href = url;
+    link.download = `${safeTournamentName}_players_list.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   // Auction status update
@@ -724,11 +787,32 @@ export default function TournamentDetail({
               <span className="auction-stat-label">Unsold</span>
             </div>
             <button 
+              className="clear-all-btn"
+              onClick={handleDownloadPlayersExcel}
+              title="Download all players in Excel format"
+              style={{
+                marginLeft: 'auto',
+                background: 'rgba(46, 204, 113, 0.12)',
+                border: '1px solid rgba(46, 204, 113, 0.35)',
+                color: '#2ecc71',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(46, 204, 113, 0.2)')}
+              onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(46, 204, 113, 0.12)')}
+            >
+              📥 DOWNLOAD EXCEL
+            </button>
+            {/* <button 
               className="clear-all-btn" 
               onClick={handleClearPlayers}
               title="Delete all players and images"
               style={{
-                marginLeft: 'auto',
+                marginLeft: '0.75rem',
                 background: 'rgba(255, 68, 68, 0.1)',
                 border: '1px solid rgba(255, 68, 68, 0.3)',
                 color: '#ff4444',
@@ -743,7 +827,7 @@ export default function TournamentDetail({
               onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(255, 68, 68, 0.1)')}
             >
               💥 CLEAR ALL
-            </button>
+            </button> */}
           </div>
 
           {/* Search Bar */}
