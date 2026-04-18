@@ -352,6 +352,59 @@ header p { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 1px; }
   line-height: 1.1;
 }
 
+/* When no banner image — premium centered title stack (matches print / T10 style cards) */
+.card-tournament-title-fallback {
+  flex: 1;
+  min-width: 0;
+  height: var(--card-tournament-row-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+  padding: 0 6px;
+}
+.card-fallback-event-name {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-transform: uppercase;
+  line-height: 1.05;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.25);
+}
+.card-fallback-tagline {
+  font-size: 0.45rem;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1.2;
+  max-width: 100%;
+}
+.card-fallback-year-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 1px;
+}
+.card-fallback-year {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.85);
+}
+.card-fallback-year-decoration {
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65), transparent);
+}
+
 /* Hero player image — full-bleed width (edge to edge) */
 .card-hero-area {
   position: absolute;

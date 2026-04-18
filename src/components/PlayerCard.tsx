@@ -148,7 +148,19 @@ export default function PlayerCard({ state }: PlayerCardProps) {
           <div className="card-tournament-banner">
             <img src={state.tournamentBannerSrc} alt="" />
           </div>
-        ) : null}
+        ) : (
+          <div className="card-tournament-title-fallback">
+            <div className="card-fallback-event-name">
+              {(state.tournamentName || 'CRICKNOVA').toUpperCase()}
+            </div>
+            <div className="card-fallback-tagline">One Game. One Dream. One Champion.</div>
+            <div className="card-fallback-year-row">
+              <span className="card-fallback-year-decoration" aria-hidden />
+              <span className="card-fallback-year">{state.tournamentYear || '—'}</span>
+              <span className="card-fallback-year-decoration" aria-hidden />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hero player image */}
