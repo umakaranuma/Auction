@@ -9,8 +9,11 @@ import { createTournament, updateTournament } from '../lib/api';
 
 type AppView = 'picker' | 'setup' | 'detail' | 'edit';
 const AUTH_STORAGE_KEY = 'ecricket_static_auth';
+const ROLE_STORAGE_KEY = 'ecricket_user_role';
 const STATIC_LOGIN_EMAIL = 'ultron@gmail.cm';
 const STATIC_LOGIN_PASSWORD = 'umaultron1126';
+const VIEWER_LOGIN_EMAIL = 'viewer@gmail.com';
+const VIEWER_LOGIN_PASSWORD = 'viewerpassword';
 
 interface SelectedTournament {
   id: number;
@@ -32,6 +35,7 @@ export default function Home() {
   const [loginError, setLoginError] = useState('');
   const [view, setView] = useState<AppView>('picker');
   const [selectedTournament, setSelectedTournament] = useState<SelectedTournament | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'viewer'>('admin');
 
   const [tournament, setTournament] = useState<TournamentInfo>({
     tournamentName: '',
@@ -50,6 +54,8 @@ export default function Home() {
 
   useEffect(() => {
     const loggedIn = localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
+    const role = localStorage.getItem(ROLE_STORAGE_KEY) as 'admin' | 'viewer';
+    if (role) setUserRole(role);
     setIsAuthenticated(loggedIn);
     setAuthReady(true);
   }, []);
@@ -59,6 +65,16 @@ export default function Home() {
     const email = loginEmail.trim();
     if (email === STATIC_LOGIN_EMAIL && loginPassword === STATIC_LOGIN_PASSWORD) {
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+      localStorage.setItem(ROLE_STORAGE_KEY, 'admin');
+      setUserRole('admin');
+      setIsAuthenticated(true);
+      setLoginError('');
+      return;
+    }
+    if (email === VIEWER_LOGIN_EMAIL && loginPassword === VIEWER_LOGIN_PASSWORD) {
+      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+      localStorage.setItem(ROLE_STORAGE_KEY, 'viewer');
+      setUserRole('viewer');
       setIsAuthenticated(true);
       setLoginError('');
       return;
@@ -245,14 +261,14 @@ export default function Home() {
               <label>Email</label>
               <div className="login-input-wrap">
                 <span className="login-input-icon">✉️</span>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="ultron@gmail.cm"
-                autoComplete="username"
-                required
-              />
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="mail@gmail.com"
+                  autoComplete="username"
+                  required
+                />
               </div>
             </div>
 
@@ -260,14 +276,14 @@ export default function Home() {
               <label>Password</label>
               <div className="login-input-wrap">
                 <span className="login-input-icon">🔒</span>
-              <input
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••••••"
-                autoComplete="current-password"
-                required
-              />
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  autoComplete="current-password"
+                  required
+                />
               </div>
             </div>
 
@@ -290,6 +306,7 @@ export default function Home() {
         <TournamentPicker
           onSelect={handlePickTournament}
           onCreateNew={handleCreateNew}
+          isViewer={userRole === 'viewer'}
         />
       </>
     );
@@ -351,6 +368,7 @@ export default function Home() {
           playerBasePrice={selectedTournament.player_base_price || 10}
           onBack={handleBackToPicker}
           onEdit={handleEditTournament}
+          isViewer={userRole === 'viewer'}
         />
       )}
     </>

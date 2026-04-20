@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import FormPanel from './FormPanel';
 import PreviewPanel from './PreviewPanel';
 import AuctionWheel from './AuctionWheel';
@@ -8,7 +10,11 @@ import PlayerCard from './PlayerCard';
 import { PlayerCardState, TournamentInfo } from '../types';
 import { getPlayers, createPlayer, updatePlayer, updatePlayerAuctionStatus, resetAuction, clearPlayers, getTeams, createTeam, updateTeam, deleteTeam, deletePlayer } from '../lib/api';
 import { roleShowsBowling } from '../lib/playerRole';
-import { getNextPlayerDisplayNumber, getPlayerDisplayNumber } from '../lib/playerDisplayNumber';
+import {
+  getNextPlayerDisplayNumber,
+  getPlayerDisplayNumber,
+  sortPlayersForDisplayOrder,
+} from '../lib/playerDisplayNumber';
 
 type DetailTab = 'players' | 'teams' | 'create' | 'auction';
 
@@ -50,6 +56,7 @@ interface TournamentDetailProps {
   playerBasePrice: number;
   onBack: () => void;
   onEdit?: () => void;
+  isViewer?: boolean;
 }
 
 const defaultPlayerFields = {
@@ -68,6 +75,29 @@ const defaultPlayerFields = {
   roles: [] as string[],
 };
 
+function fitWithinBox(sourceWidth: number, sourceHeight: number, maxWidth: number, maxHeight: number) {
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
+    return { width: maxWidth, height: maxHeight };
+  }
+
+  const scale = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight);
+  return {
+    width: sourceWidth * scale,
+    height: sourceHeight * scale,
+  };
+}
+
+function buildSafePdfName(name: string) {
+  return name.trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase() || 'tournament';
+}
+
+/** PDF page template — wordmark next to tournament/club logo */
+const PDF_BRAND_LABEL = 'CRICNOVA';
+
+/** Matches `.player-card` in globals.css — used to fit rasterized cards into the PDF grid */
+const PLAYER_CARD_CSS_WIDTH = 380;
+const PLAYER_CARD_CSS_HEIGHT = 560;
+
 export default function TournamentDetail({
   tournamentId,
   tournamentName,
@@ -80,6 +110,7 @@ export default function TournamentDetail({
   playerBasePrice,
   onBack,
   onEdit,
+  isViewer,
 }: TournamentDetailProps) {
   const [tab, setTab] = useState<DetailTab>('players');
   const [players, setPlayers] = useState<PlayerFromAPI[]>([]);
@@ -122,7 +153,10 @@ export default function TournamentDetail({
   // Player card viewer modal
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [downloadCardState, setDownloadCardState] = useState<PlayerCardState | null>(null);
+  const [downloadingAllCards, setDownloadingAllCards] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0 });
   const downloadCardWrapRef = useRef<HTMLDivElement>(null);
+  const pdfImageCacheRef = useRef<Map<string, Promise<string | null>>>(new Map());
 
   const tournament: TournamentInfo = {
     tournamentName,
@@ -631,14 +665,11 @@ export default function TournamentDetail({
   const viewerPlayer = viewerIndex !== null ? filteredPlayers[viewerIndex] : null;
   const viewerCardState: PlayerCardState | null = viewerPlayer ? buildCardState(viewerPlayer) : null;
 
-  const handleDownloadPlayerCard = async (e: React.MouseEvent, player: PlayerFromAPI) => {
-    e.stopPropagation();
-    const cardState = buildCardState(player);
-    setDownloadCardState(cardState);
+  const waitForRenderedCard = async () => {
     await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
 
     const card = downloadCardWrapRef.current?.querySelector('#player-card') as HTMLElement | null;
-    if (!card) return;
+    if (!card) return null;
 
     const images = card.querySelectorAll('img');
     await Promise.all(
@@ -655,6 +686,75 @@ export default function TournamentDetail({
       )
     );
 
+    return card;
+  };
+
+  const rasterizePlayerCardElement = async (cardEl: HTMLElement) => {
+    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    const canvas = await html2canvas(cardEl, {
+      backgroundColor: '#0a1628',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: PLAYER_CARD_CSS_WIDTH,
+      height: PLAYER_CARD_CSS_HEIGHT,
+    });
+    return canvas.toDataURL('image/jpeg', 0.92);
+  };
+
+  const getCachedPdfImage = useCallback(
+    async (src: string | null | undefined, maxWidth: number, maxHeight: number, quality = 0.82) => {
+      if (!src) return null;
+
+      const cacheKey = `${src}|${maxWidth}|${maxHeight}|${quality}`;
+      const existing = pdfImageCacheRef.current.get(cacheKey);
+      if (existing) {
+        return existing;
+      }
+
+      const task = new Promise<string | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = () => {
+          try {
+            const { width, height } = fitWithinBox(img.naturalWidth, img.naturalHeight, maxWidth, maxHeight);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(width));
+            canvas.height = Math.max(1, Math.round(height));
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+              resolve(null);
+              return;
+            }
+
+            context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } catch {
+            resolve(null);
+          }
+        };
+
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+
+      pdfImageCacheRef.current.set(cacheKey, task);
+      return task;
+    },
+    []
+  );
+
+  const handleDownloadPlayerCard = async (e: React.MouseEvent, player: PlayerFromAPI) => {
+    e.stopPropagation();
+    const cardState = buildCardState(player);
+    setDownloadCardState(cardState);
+    const card = await waitForRenderedCard();
+    if (!card) return;
+
     const canvas = await html2canvas(card, {
       backgroundColor: null,
       scale: 3,
@@ -668,6 +768,134 @@ export default function TournamentDetail({
     link.download = `player_card_${name}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+  };
+
+  const handleDownloadAllPlayerCardsPdf = async () => {
+    if (players.length === 0) {
+      alert('No players available to download.');
+      return;
+    }
+
+    try {
+      const sortedPlayers = sortPlayersForDisplayOrder(players);
+      setDownloadingAllCards(true);
+      setDownloadProgress({ current: 0, total: sortedPlayers.length });
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4',
+        compress: true,
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const pageMargin = 22;
+      const gutter = 12;
+      const templateHeaderH = 30;
+      const templateFooterH = 18;
+      const gridTop = pageMargin + templateHeaderH + 4;
+      const gridBottom = pageHeight - pageMargin - templateFooterH - 2;
+      const gridHeight = Math.max(0, gridBottom - gridTop);
+      const cellW = (pageWidth - pageMargin * 2 - gutter) / 2;
+      const cellH = (gridHeight - gutter) / 2;
+      const cardScale = 0.86;
+      const cardWidth = Math.floor((cellW - 4) * cardScale);
+      const cardHeight = Math.floor((cellH - 4) * cardScale);
+
+      const drawPdfPageTemplate = async () => {
+        const barY = pageMargin;
+        pdf.setFillColor(5, 14, 32);
+        pdf.rect(pageMargin, barY, pageWidth - pageMargin * 2, templateHeaderH - 4, 'F');
+        pdf.setDrawColor(0, 190, 230);
+        pdf.setLineWidth(0.75);
+        pdf.line(pageMargin, barY + templateHeaderH - 2, pageWidth - pageMargin, barY + templateHeaderH - 2);
+
+        const markLogoSize = templateHeaderH - 14;
+        const markX = pageMargin + 6;
+        const markY = barY + 7;
+        const brandLogo = await getCachedPdfImage(clubLogoSrc, 160, 160, 0.88);
+        if (brandLogo) {
+          pdf.addImage(brandLogo, 'JPEG', markX, markY, markLogoSize, markLogoSize, undefined, 'FAST');
+        } else {
+          pdf.setFillColor(8, 28, 55);
+          pdf.roundedRect(markX, markY, markLogoSize, markLogoSize, 4, 4, 'F');
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(10);
+          pdf.setTextColor(0, 212, 255);
+          pdf.text('CN', markX + markLogoSize / 2, markY + markLogoSize / 2 + 3, { align: 'center' });
+        }
+
+        const textX = markX + markLogoSize + 12;
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 220, 255);
+        pdf.text(PDF_BRAND_LABEL, textX, barY + 18);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7);
+        pdf.setTextColor(160, 185, 205);
+        pdf.text('Tournament player cards', textX, barY + 28);
+        if (tournamentName) {
+          pdf.setFontSize(7);
+          pdf.setTextColor(130, 155, 180);
+          pdf.text(tournamentName.toUpperCase(), pageWidth - pageMargin - 6, barY + 17, { align: 'right' });
+        }
+        if (tournamentYear) {
+          pdf.text(String(tournamentYear), pageWidth - pageMargin - 6, barY + 26, { align: 'right' });
+        }
+
+        const footY = pageHeight - pageMargin - 6;
+        pdf.setFontSize(7);
+        pdf.setTextColor(120, 145, 170);
+        pdf.setDrawColor(0, 120, 150);
+        pdf.setLineWidth(0.35);
+        pdf.line(pageMargin, footY - 12, pageWidth - pageMargin, footY - 12);
+        pdf.text(`${PDF_BRAND_LABEL} · Cricket roster`, pageMargin + 2, footY);
+        pdf.text('Confidential — for tournament use only', pageWidth - pageMargin - 2, footY, { align: 'right' });
+      };
+
+      await drawPdfPageTemplate();
+
+      for (const [index, player] of sortedPlayers.entries()) {
+        if (index > 0 && index % 4 === 0) {
+          pdf.addPage();
+          await drawPdfPageTemplate();
+        }
+
+        const slot = index % 4;
+        const column = slot % 2;
+        const row = Math.floor(slot / 2);
+        const x =
+          pageMargin + column * (cellW + gutter) + (cellW - cardWidth) / 2;
+        const y = gridTop + row * (cellH + gutter) + (cellH - cardHeight) / 2;
+
+        flushSync(() => {
+          setDownloadCardState(buildCardState(player));
+        });
+        const cardEl = await waitForRenderedCard();
+        if (!cardEl) {
+          setDownloadProgress({ current: index + 1, total: sortedPlayers.length });
+          continue;
+        }
+        const jpegData = await rasterizePlayerCardElement(cardEl);
+        const fit = Math.min(cardWidth / PLAYER_CARD_CSS_WIDTH, cardHeight / PLAYER_CARD_CSS_HEIGHT);
+        const drawW = PLAYER_CARD_CSS_WIDTH * fit;
+        const drawH = PLAYER_CARD_CSS_HEIGHT * fit;
+        const dx = x + (cardWidth - drawW) / 2;
+        const dy = y + (cardHeight - drawH) / 2;
+        pdf.addImage(jpegData, 'JPEG', dx, dy, drawW, drawH, undefined, 'FAST');
+
+        setDownloadProgress({ current: index + 1, total: sortedPlayers.length });
+      }
+
+      pdf.save(`${buildSafePdfName(tournamentName)}_all_player_cards.pdf`);
+    } catch (error) {
+      console.error('Failed to download player cards PDF:', error);
+      alert('Failed to download player cards PDF. Please try again.');
+    } finally {
+      setDownloadingAllCards(false);
+      setDownloadProgress({ current: 0, total: 0 });
+      setDownloadCardState(null);
+    }
   };
 
   const handleOpenViewer = (index: number) => {
@@ -713,7 +941,7 @@ export default function TournamentDetail({
           <div>
             <div className="detail-header-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {tournamentName}
-              {onEdit && (
+              {onEdit && !isViewer && (
                 <button className="edit-tournament-btn" onClick={onEdit} title="Edit Tournament Details" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '4px', opacity: 0.7 }}>
                   ✏️
                 </button>
@@ -743,20 +971,24 @@ export default function TournamentDetail({
         >
           🏏 Teams ({teams.length})
         </button>
-        <button
-          className={`mode-tab ${tab === 'create' ? 'active' : ''}`}
-          onClick={() => {
-            setTab('create');
-            if (editingPlayerId == null) {
-              setState((s) => ({
-                ...s,
-                playerSerial: getNextPlayerDisplayNumber(players),
-              }));
-            }
-          }}
-        >
-          ➕ Add Player
-        </button>
+        {!isViewer && (
+          <>
+            <button
+              className={`mode-tab ${tab === 'create' ? 'active' : ''}`}
+              onClick={() => {
+                setTab('create');
+                if (editingPlayerId == null) {
+                  setState((s) => ({
+                    ...s,
+                    playerSerial: getNextPlayerDisplayNumber(players),
+                  }));
+                }
+              }}
+            >
+              ➕ Add Player
+            </button>
+          </>
+        )}
         <button
           className={`mode-tab ${tab === 'auction' ? 'active' : ''}`}
           onClick={() => setTab('auction')}
@@ -806,6 +1038,37 @@ export default function TournamentDetail({
               onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(46, 204, 113, 0.12)')}
             >
               📥 DOWNLOAD EXCEL
+            </button>
+            <button
+              className="clear-all-btn"
+              onClick={handleDownloadAllPlayerCardsPdf}
+              title="Download all player cards in one PDF"
+              disabled={downloadingAllCards}
+              style={{
+                marginLeft: '0.75rem',
+                background: 'rgba(52, 152, 219, 0.12)',
+                border: '1px solid rgba(52, 152, 219, 0.35)',
+                color: '#5dade2',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                cursor: downloadingAllCards ? 'not-allowed' : 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                transition: 'all 0.2s',
+                opacity: downloadingAllCards ? 0.7 : 1,
+              }}
+              onMouseOver={(e) => {
+                if (!downloadingAllCards) {
+                  e.currentTarget.style.background = 'rgba(52, 152, 219, 0.2)';
+                }
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(52, 152, 219, 0.12)';
+              }}
+            >
+              {downloadingAllCards
+                ? `Generating PDF ${downloadProgress.current}/${downloadProgress.total}...`
+                : '📄 DOWNLOAD PLAYER CARDS PDF'}
             </button>
             {/* <button 
               className="clear-all-btn" 
@@ -923,30 +1186,34 @@ export default function TournamentDetail({
                       <div className="status-badge status-pending">⏳ PENDING</div>
                     )}
                   </div>
-                    <button
-                      className="player-revert-btn"
-                      style={{ marginRight: '40px' }}
-                      onClick={(e) => handleEditPlayer(e, p)}
-                      title="Edit Player"
-                    >
-                      ✏️
-                    </button>
-                    {p.auction_status !== 'pending' && (
-                      <button
-                        className="player-revert-btn"
-                        onClick={(e) => handleRevertClick(e, p)}
-                        title="Revert to Pending"
-                      >
-                        ↩️
-                      </button>
+                    {!isViewer && (
+                      <>
+                        <button
+                          className="player-revert-btn"
+                          style={{ marginRight: '40px' }}
+                          onClick={(e) => handleEditPlayer(e, p)}
+                          title="Edit Player"
+                        >
+                          ✏️
+                        </button>
+                        {p.auction_status !== 'pending' && (
+                          <button
+                            className="player-revert-btn"
+                            onClick={(e) => handleRevertClick(e, p)}
+                            title="Revert to Pending"
+                          >
+                            ↩️
+                          </button>
+                        )}
+                        <button
+                          className="player-assign-btn"
+                          onClick={(e) => handleOpenAssignModal(e, p)}
+                          title="Assign Player To Team"
+                        >
+                          🏷️
+                        </button>
+                      </>
                     )}
-                    <button
-                      className="player-assign-btn"
-                      onClick={(e) => handleOpenAssignModal(e, p)}
-                      title="Assign Player To Team"
-                    >
-                      🏷️
-                    </button>
                     <button
                       className="player-download-icon-btn"
                       onClick={(e) => handleDownloadPlayerCard(e, p)}
@@ -955,24 +1222,26 @@ export default function TournamentDetail({
                       ⬇️
                     </button>
                     <div className="player-list-view-icon">👁</div>
-                    <button
-                      className="player-delete-icon-btn"
-                      onClick={(e) => handleDeletePlayer(e, p)}
-                      title="Delete Player"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '1.2rem',
-                        marginLeft: '10px',
-                        opacity: 0.6,
-                        transition: 'opacity 0.2s'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                      onMouseOut={(e) => e.currentTarget.style.opacity = '0.6'}
-                    >
-                      🗑️
-                    </button>
+                    {!isViewer && (
+                      <button
+                        className="player-delete-icon-btn"
+                        onClick={(e) => handleDeletePlayer(e, p)}
+                        title="Delete Player"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '1.2rem',
+                          marginLeft: '10px',
+                          opacity: 0.6,
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseOut={(e) => e.currentTarget.style.opacity = '0.6'}
+                      >
+                        🗑️
+                      </button>
+                    )}
                 </div>
               ))}
             </div>
@@ -984,58 +1253,61 @@ export default function TournamentDetail({
       {tab === 'teams' && (
         <div className="detail-players-tab">
           {/* Create Team Form */}
-          <div className="team-create-card">
-            <h3 className="team-create-title">➕ Create New Team</h3>
-            <div className="team-create-form">
-              <div className="team-create-logo-area">
-                <input
-                  type="file"
-                  ref={teamLogoRef}
-                  accept="image/*"
-                  onChange={handleTeamLogoChange}
-                />
-                <div
-                  className="team-logo-upload"
-                  onClick={() => teamLogoRef.current?.click()}
-                >
-                  {newTeamLogoPreview ? (
-                    <img src={newTeamLogoPreview} alt="Team Logo" />
-                  ) : (
-                    <div className="team-logo-placeholder">
-                      <span>🏏</span>
-                      <span className="team-logo-text">Logo</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="team-create-fields">
-                <div className="form-group">
-                  <label>Team Name</label>
+          {!isViewer && (
+            <div className="team-create-card">
+              <h3 className="team-create-title">➕ Create New Team</h3>
+              <div className="team-create-form">
+                <div className="team-create-logo-area">
                   <input
-                    type="text"
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
-                    placeholder="e.g. Chennai Super Kings"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreateTeam();
-                    }}
+                    type="file"
+                    ref={teamLogoRef}
+                    accept="image/*"
+                    onChange={handleTeamLogoChange}
                   />
+                  <div
+                    className="team-logo-upload"
+                    onClick={() => teamLogoRef.current?.click()}
+                  >
+                    {newTeamLogoPreview ? (
+                      <img src={newTeamLogoPreview} alt="Team Logo" />
+                    ) : (
+                      <div className="team-logo-placeholder">
+                        <span>🏏</span>
+                        <span className="team-logo-text">Logo</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button
-                  className="team-create-btn"
-                  onClick={handleCreateTeam}
-                  disabled={teamSaving || !newTeamName.trim()}
-                >
-                  {teamSaving ? '⏳ Creating...' : '🏏 CREATE TEAM'}
-                </button>
+                <div className="team-create-fields">
+                  <div className="form-group">
+                    <label>Team Name</label>
+                    <input
+                      type="text"
+                      value={newTeamName}
+                      onChange={(e) => setNewTeamName(e.target.value)}
+                      placeholder="e.g. Chennai Super Kings"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCreateTeam();
+                      }}
+                    />
+                  </div>
+                  <button
+                    className="team-create-btn"
+                    onClick={handleCreateTeam}
+                    disabled={teamSaving || !newTeamName.trim()}
+                  >
+                    {teamSaving ? '⏳ Creating...' : '🏏 CREATE TEAM'}
+                  </button>
+                </div>
               </div>
+              {teamMessage && (
+                <div className={`team-message ${teamMessage.startsWith('✅') ? 'success' : 'error'}`}>
+                  {teamMessage}
+                </div>
+              )}
             </div>
-            {teamMessage && (
-              <div className={`team-message ${teamMessage.startsWith('✅') ? 'success' : 'error'}`}>
-                {teamMessage}
-              </div>
-            )}
-          </div>
+          )}
+
 
           {/* Teams List */}
           {teamsLoading ? (
@@ -1075,22 +1347,24 @@ export default function TournamentDetail({
                           : 'No players yet'}
                       </div>
                     </div>
-                    <div className="team-card-actions">
-                      <button
-                        className="team-edit-btn"
-                        onClick={() => handleEditTeamClick(team)}
-                        title="Edit Team"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="team-delete-btn"
-                        onClick={() => handleDeleteTeam(team.id, team.name)}
-                        title="Delete Team"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    {!isViewer && (
+                      <div className="team-card-actions">
+                        <button
+                          className="team-edit-btn"
+                          onClick={() => handleEditTeamClick(team)}
+                          title="Edit Team"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="team-delete-btn"
+                          onClick={() => handleDeleteTeam(team.id, team.name)}
+                          title="Delete Team"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1134,6 +1408,7 @@ export default function TournamentDetail({
           onUpdateStatus={handleUpdateStatus}
           onResetAuction={handleResetAuction}
           onRefreshPlayers={fetchPlayers}
+          isViewer={isViewer}
         />
       )}
 
@@ -1181,16 +1456,18 @@ export default function TournamentDetail({
                 {viewerPlayer.auction_status === 'pending' && (
                   <div className="status-badge status-pending">⏳ PENDING</div>
                 )}
-                <button
-                  className="viewer-edit-btn"
-                  onClick={(e) => {
-                    handleCloseViewer();
-                    handleEditPlayer(e, viewerPlayer);
-                  }}
-                  title="Edit Player Profile"
-                >
-                  ✏️ Edit Profile
-                </button>
+                {!isViewer && (
+                  <button
+                    className="viewer-edit-btn"
+                    onClick={(e) => {
+                      handleCloseViewer();
+                      handleEditPlayer(e, viewerPlayer);
+                    }}
+                    title="Edit Player Profile"
+                  >
+                    ✏️ Edit Profile
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1210,7 +1487,16 @@ export default function TournamentDetail({
       <div
         ref={downloadCardWrapRef}
         aria-hidden="true"
-        style={{ position: 'fixed', left: '-10000px', top: 0, pointerEvents: 'none', opacity: 0 }}
+        style={{
+          position: 'fixed',
+          left: '-12000px',
+          top: 0,
+          width: PLAYER_CARD_CSS_WIDTH,
+          height: PLAYER_CARD_CSS_HEIGHT,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
       >
         {downloadCardState && <PlayerCard state={downloadCardState} />}
       </div>
