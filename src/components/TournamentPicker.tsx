@@ -21,9 +21,10 @@ export interface TournamentFromAPI {
 interface TournamentPickerProps {
   onSelect: (tournament: TournamentFromAPI) => void;
   onCreateNew: () => void;
+  isViewer?: boolean;
 }
 
-export default function TournamentPicker({ onSelect, onCreateNew }: TournamentPickerProps) {
+export default function TournamentPicker({ onSelect, onCreateNew, isViewer }: TournamentPickerProps) {
   const [tournaments, setTournaments] = useState<TournamentFromAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,11 +73,13 @@ export default function TournamentPicker({ onSelect, onCreateNew }: TournamentPi
 
         <div className="picker-grid">
           {/* Create New Tournament Card */}
-          <button className="picker-card picker-card-new" onClick={onCreateNew}>
-            <div className="picker-card-new-icon">➕</div>
-            <div className="picker-card-new-label">CREATE NEW</div>
-            <div className="picker-card-new-sub">Set up a new tournament</div>
-          </button>
+          {!isViewer && (
+            <button className="picker-card picker-card-new" onClick={onCreateNew}>
+              <div className="picker-card-new-icon">➕</div>
+              <div className="picker-card-new-label">CREATE NEW</div>
+              <div className="picker-card-new-sub">Set up a new tournament</div>
+            </button>
+          )}
 
           {/* Existing Tournament Cards */}
           {tournaments.map((t) => (

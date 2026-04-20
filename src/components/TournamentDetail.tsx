@@ -56,6 +56,7 @@ interface TournamentDetailProps {
   playerBasePrice: number;
   onBack: () => void;
   onEdit?: () => void;
+  isViewer?: boolean;
 }
 
 const defaultPlayerFields = {
@@ -109,6 +110,7 @@ export default function TournamentDetail({
   playerBasePrice,
   onBack,
   onEdit,
+  isViewer,
 }: TournamentDetailProps) {
   const [tab, setTab] = useState<DetailTab>('players');
   const [players, setPlayers] = useState<PlayerFromAPI[]>([]);
@@ -939,7 +941,7 @@ export default function TournamentDetail({
           <div>
             <div className="detail-header-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {tournamentName}
-              {onEdit && (
+              {onEdit && !isViewer && (
                 <button className="edit-tournament-btn" onClick={onEdit} title="Edit Tournament Details" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '4px', opacity: 0.7 }}>
                   ✏️
                 </button>
@@ -969,20 +971,24 @@ export default function TournamentDetail({
         >
           🏏 Teams ({teams.length})
         </button>
-        <button
-          className={`mode-tab ${tab === 'create' ? 'active' : ''}`}
-          onClick={() => {
-            setTab('create');
-            if (editingPlayerId == null) {
-              setState((s) => ({
-                ...s,
-                playerSerial: getNextPlayerDisplayNumber(players),
-              }));
-            }
-          }}
-        >
-          ➕ Add Player
-        </button>
+        {!isViewer && (
+          <>
+            <button
+              className={`mode-tab ${tab === 'create' ? 'active' : ''}`}
+              onClick={() => {
+                setTab('create');
+                if (editingPlayerId == null) {
+                  setState((s) => ({
+                    ...s,
+                    playerSerial: getNextPlayerDisplayNumber(players),
+                  }));
+                }
+              }}
+            >
+              ➕ Add Player
+            </button>
+          </>
+        )}
         <button
           className={`mode-tab ${tab === 'auction' ? 'active' : ''}`}
           onClick={() => setTab('auction')}
@@ -1180,30 +1186,34 @@ export default function TournamentDetail({
                       <div className="status-badge status-pending">⏳ PENDING</div>
                     )}
                   </div>
-                    <button
-                      className="player-revert-btn"
-                      style={{ marginRight: '40px' }}
-                      onClick={(e) => handleEditPlayer(e, p)}
-                      title="Edit Player"
-                    >
-                      ✏️
-                    </button>
-                    {p.auction_status !== 'pending' && (
-                      <button
-                        className="player-revert-btn"
-                        onClick={(e) => handleRevertClick(e, p)}
-                        title="Revert to Pending"
-                      >
-                        ↩️
-                      </button>
+                    {!isViewer && (
+                      <>
+                        <button
+                          className="player-revert-btn"
+                          style={{ marginRight: '40px' }}
+                          onClick={(e) => handleEditPlayer(e, p)}
+                          title="Edit Player"
+                        >
+                          ✏️
+                        </button>
+                        {p.auction_status !== 'pending' && (
+                          <button
+                            className="player-revert-btn"
+                            onClick={(e) => handleRevertClick(e, p)}
+                            title="Revert to Pending"
+                          >
+                            ↩️
+                          </button>
+                        )}
+                        <button
+                          className="player-assign-btn"
+                          onClick={(e) => handleOpenAssignModal(e, p)}
+                          title="Assign Player To Team"
+                        >
+                          🏷️
+                        </button>
+                      </>
                     )}
-                    <button
-                      className="player-assign-btn"
-                      onClick={(e) => handleOpenAssignModal(e, p)}
-                      title="Assign Player To Team"
-                    >
-                      🏷️
-                    </button>
                     <button
                       className="player-download-icon-btn"
                       onClick={(e) => handleDownloadPlayerCard(e, p)}
@@ -1212,24 +1222,26 @@ export default function TournamentDetail({
                       ⬇️
                     </button>
                     <div className="player-list-view-icon">👁</div>
-                    <button
-                      className="player-delete-icon-btn"
-                      onClick={(e) => handleDeletePlayer(e, p)}
-                      title="Delete Player"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '1.2rem',
-                        marginLeft: '10px',
-                        opacity: 0.6,
-                        transition: 'opacity 0.2s'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                      onMouseOut={(e) => e.currentTarget.style.opacity = '0.6'}
-                    >
-                      🗑️
-                    </button>
+                    {!isViewer && (
+                      <button
+                        className="player-delete-icon-btn"
+                        onClick={(e) => handleDeletePlayer(e, p)}
+                        title="Delete Player"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '1.2rem',
+                          marginLeft: '10px',
+                          opacity: 0.6,
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseOut={(e) => e.currentTarget.style.opacity = '0.6'}
+                      >
+                        🗑️
+                      </button>
+                    )}
                 </div>
               ))}
             </div>
@@ -1241,58 +1253,61 @@ export default function TournamentDetail({
       {tab === 'teams' && (
         <div className="detail-players-tab">
           {/* Create Team Form */}
-          <div className="team-create-card">
-            <h3 className="team-create-title">➕ Create New Team</h3>
-            <div className="team-create-form">
-              <div className="team-create-logo-area">
-                <input
-                  type="file"
-                  ref={teamLogoRef}
-                  accept="image/*"
-                  onChange={handleTeamLogoChange}
-                />
-                <div
-                  className="team-logo-upload"
-                  onClick={() => teamLogoRef.current?.click()}
-                >
-                  {newTeamLogoPreview ? (
-                    <img src={newTeamLogoPreview} alt="Team Logo" />
-                  ) : (
-                    <div className="team-logo-placeholder">
-                      <span>🏏</span>
-                      <span className="team-logo-text">Logo</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="team-create-fields">
-                <div className="form-group">
-                  <label>Team Name</label>
+          {!isViewer && (
+            <div className="team-create-card">
+              <h3 className="team-create-title">➕ Create New Team</h3>
+              <div className="team-create-form">
+                <div className="team-create-logo-area">
                   <input
-                    type="text"
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
-                    placeholder="e.g. Chennai Super Kings"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreateTeam();
-                    }}
+                    type="file"
+                    ref={teamLogoRef}
+                    accept="image/*"
+                    onChange={handleTeamLogoChange}
                   />
+                  <div
+                    className="team-logo-upload"
+                    onClick={() => teamLogoRef.current?.click()}
+                  >
+                    {newTeamLogoPreview ? (
+                      <img src={newTeamLogoPreview} alt="Team Logo" />
+                    ) : (
+                      <div className="team-logo-placeholder">
+                        <span>🏏</span>
+                        <span className="team-logo-text">Logo</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button
-                  className="team-create-btn"
-                  onClick={handleCreateTeam}
-                  disabled={teamSaving || !newTeamName.trim()}
-                >
-                  {teamSaving ? '⏳ Creating...' : '🏏 CREATE TEAM'}
-                </button>
+                <div className="team-create-fields">
+                  <div className="form-group">
+                    <label>Team Name</label>
+                    <input
+                      type="text"
+                      value={newTeamName}
+                      onChange={(e) => setNewTeamName(e.target.value)}
+                      placeholder="e.g. Chennai Super Kings"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCreateTeam();
+                      }}
+                    />
+                  </div>
+                  <button
+                    className="team-create-btn"
+                    onClick={handleCreateTeam}
+                    disabled={teamSaving || !newTeamName.trim()}
+                  >
+                    {teamSaving ? '⏳ Creating...' : '🏏 CREATE TEAM'}
+                  </button>
+                </div>
               </div>
+              {teamMessage && (
+                <div className={`team-message ${teamMessage.startsWith('✅') ? 'success' : 'error'}`}>
+                  {teamMessage}
+                </div>
+              )}
             </div>
-            {teamMessage && (
-              <div className={`team-message ${teamMessage.startsWith('✅') ? 'success' : 'error'}`}>
-                {teamMessage}
-              </div>
-            )}
-          </div>
+          )}
+
 
           {/* Teams List */}
           {teamsLoading ? (
@@ -1332,22 +1347,24 @@ export default function TournamentDetail({
                           : 'No players yet'}
                       </div>
                     </div>
-                    <div className="team-card-actions">
-                      <button
-                        className="team-edit-btn"
-                        onClick={() => handleEditTeamClick(team)}
-                        title="Edit Team"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="team-delete-btn"
-                        onClick={() => handleDeleteTeam(team.id, team.name)}
-                        title="Delete Team"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    {!isViewer && (
+                      <div className="team-card-actions">
+                        <button
+                          className="team-edit-btn"
+                          onClick={() => handleEditTeamClick(team)}
+                          title="Edit Team"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="team-delete-btn"
+                          onClick={() => handleDeleteTeam(team.id, team.name)}
+                          title="Delete Team"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1391,6 +1408,7 @@ export default function TournamentDetail({
           onUpdateStatus={handleUpdateStatus}
           onResetAuction={handleResetAuction}
           onRefreshPlayers={fetchPlayers}
+          isViewer={isViewer}
         />
       )}
 
@@ -1438,16 +1456,18 @@ export default function TournamentDetail({
                 {viewerPlayer.auction_status === 'pending' && (
                   <div className="status-badge status-pending">⏳ PENDING</div>
                 )}
-                <button
-                  className="viewer-edit-btn"
-                  onClick={(e) => {
-                    handleCloseViewer();
-                    handleEditPlayer(e, viewerPlayer);
-                  }}
-                  title="Edit Player Profile"
-                >
-                  ✏️ Edit Profile
-                </button>
+                {!isViewer && (
+                  <button
+                    className="viewer-edit-btn"
+                    onClick={(e) => {
+                      handleCloseViewer();
+                      handleEditPlayer(e, viewerPlayer);
+                    }}
+                    title="Edit Player Profile"
+                  >
+                    ✏️ Edit Profile
+                  </button>
+                )}
               </div>
             </div>
 

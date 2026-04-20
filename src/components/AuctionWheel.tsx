@@ -51,6 +51,7 @@ interface AuctionWheelProps {
   ) => Promise<void>;
   onResetAuction: () => Promise<void>;
   onRefreshPlayers: () => Promise<void>;
+  isViewer?: boolean;
 }
 
 type AuctionView = 'wheel' | 'result';
@@ -70,6 +71,7 @@ export default function AuctionWheel({
   onUpdateStatus,
   onResetAuction,
   onRefreshPlayers,
+  isViewer,
 }: AuctionWheelProps) {
   const [spinning, setSpinning] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerFromAPI | null>(null);
@@ -436,9 +438,11 @@ export default function AuctionWheel({
             <span className="auction-stat-label">Unsold</span>
           </div>
         </div>
-        <button className="auction-reset-btn" onClick={handleReset} title="Reset entire auction">
-          🔄 Reset
-        </button>
+        {!isViewer && (
+          <button className="auction-reset-btn" onClick={handleReset} title="Reset entire auction">
+            🔄 Reset
+          </button>
+        )}
       </div>
 
       <div className="auction-team-stats">
@@ -573,13 +577,15 @@ export default function AuctionWheel({
                                     {'\u20B9'}
                                     {Number(ap.sold_price).toLocaleString()}
                                   </div>
-                                  <button
-                                    type="button"
-                                    className="ap-price-edit-btn"
-                                    onClick={(e) => startEditAcquiredPrice(ap, e)}
-                                  >
-                                    Edit
-                                  </button>
+                                  {!isViewer && (
+                                    <button
+                                      type="button"
+                                      className="ap-price-edit-btn"
+                                      onClick={(e) => startEditAcquiredPrice(ap, e)}
+                                    >
+                                      Edit
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -601,7 +607,7 @@ export default function AuctionWheel({
       {roundCompleteMsg && (
         <div className="round-complete-banner">
           <div className="round-complete-text">🏆 {roundCompleteMsg}</div>
-          {unsoldPlayers.length > 0 && auctionRound === 1 && (
+          {unsoldPlayers.length > 0 && auctionRound === 1 && !isViewer && (
             <button className="round2-btn" onClick={handleStartRound2}>
               🔄 START ROUND 2 ({unsoldPlayers.length} unsold players)
             </button>
@@ -631,9 +637,11 @@ export default function AuctionWheel({
                 spinning={spinning}
                 onSpinEnd={handleSpinEnd}
               />
-              <button className="spin-btn" onClick={handleSpin} disabled={spinning}>
-                {spinning ? '🌀 SPINNING...' : '🎯 SPIN THE WHEEL'}
-              </button>
+              {!isViewer && (
+                <button className="spin-btn" onClick={handleSpin} disabled={spinning}>
+                  {spinning ? '🌀 SPINNING...' : '🎯 SPIN THE WHEEL'}
+                </button>
+              )}
               <div className="player-count-badge">
                 {eligiblePlayers.length} player{eligiblePlayers.length !== 1 ? 's' : ''} remaining
                 {auctionRound === 2 && ' (Round 2)'}
@@ -651,103 +659,109 @@ export default function AuctionWheel({
               </div>
 
               {/* Sold/Unsold Actions */}
-              <div className="auction-actions">
-                <div className="auction-action-row">
-                  <div className="form-group auction-input-group">
-                    <label>Sold To (Team)</label>
-                    {teams.length > 0 ? (
-                      <div className="team-select-wrapper">
-                        <select
+              {!isViewer ? (
+                <div className="auction-actions">
+                  <div className="auction-action-row">
+                    <div className="form-group auction-input-group">
+                      <label>Sold To (Team)</label>
+                      {teams.length > 0 ? (
+                        <div className="team-select-wrapper">
+                          <select
+                            value={soldTo}
+                            onChange={(e) => setSoldTo(e.target.value)}
+                            className="team-select"
+                            aria-invalid={!!saleValidation.error && teams.length > 0}
+                          >
+                            <option value="">— Select Team —</option>
+                            {teams.map((t) => {
+                              const st = teamStats.find((x) => x.id === t.id);
+                              const full = st != null && st.remainingPlayersNeeded <= 0;
+                              return (
+                                <option key={t.id} value={t.name} disabled={full}>
+                                  {full ? `${t.name} (squad full)` : t.name}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
                           value={soldTo}
                           onChange={(e) => setSoldTo(e.target.value)}
-                          className="team-select"
-                          aria-invalid={!!saleValidation.error && teams.length > 0}
-                        >
-                          <option value="">— Select Team —</option>
-                          {teams.map((t) => {
-                            const st = teamStats.find((x) => x.id === t.id);
-                            const full = st != null && st.remainingPlayersNeeded <= 0;
-                            return (
-                              <option key={t.id} value={t.name} disabled={full}>
-                                {full ? `${t.name} (squad full)` : t.name}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-                    ) : (
+                          placeholder="e.g. Chennai Kings"
+                          aria-invalid={!!saleValidation.error}
+                        />
+                      )}
+                      {teams.length > 0 && soldTo.trim() && saleValidation.effectiveMax !== null && (
+                        <div className="auction-sale-hint">
+                          Max for this pick:{' '}
+                          <span className="max-bid-val">
+                            {'₹'}
+                            {saleValidation.effectiveMax.toLocaleString()}
+                          </span>
+                          {teamStats.find((t) => t.name === soldTo.trim())?.remainingPlayersNeeded === 0
+                            ? ' · squad full'
+                            : null}
+                        </div>
+                      )}
+                    </div>
+                    <div className="form-group auction-input-group">
+                      <label>Price (₹)</label>
                       <input
-                        type="text"
-                        value={soldTo}
-                        onChange={(e) => setSoldTo(e.target.value)}
-                        placeholder="e.g. Chennai Kings"
-                        aria-invalid={!!saleValidation.error}
+                        type="number"
+                        value={soldPrice}
+                        onChange={(e) => setSoldPrice(e.target.value)}
+                        placeholder={`Min ₹${playerBasePrice.toLocaleString()}`}
+                        min={playerBasePrice}
+                        max={
+                          saleValidation.effectiveMax != null && saleValidation.effectiveMax > 0
+                            ? Math.max(playerBasePrice, saleValidation.effectiveMax)
+                            : undefined
+                        }
+                        className={saleValidation.priceInputInvalid ? 'auction-input-invalid' : undefined}
+                        aria-invalid={saleValidation.priceInputInvalid}
                       />
-                    )}
-                    {teams.length > 0 && soldTo.trim() && saleValidation.effectiveMax !== null && (
-                      <div className="auction-sale-hint">
-                        Max for this pick:{' '}
-                        <span className="max-bid-val">
-                          {'₹'}
-                          {saleValidation.effectiveMax.toLocaleString()}
-                        </span>
-                        {teamStats.find((t) => t.name === soldTo.trim())?.remainingPlayersNeeded === 0
-                          ? ' · squad full'
-                          : null}
-                      </div>
-                    )}
+                    </div>
                   </div>
-                  <div className="form-group auction-input-group">
-                    <label>Price (₹)</label>
-                    <input
-                      type="number"
-                      value={soldPrice}
-                      onChange={(e) => setSoldPrice(e.target.value)}
-                      placeholder={`Min ₹${playerBasePrice.toLocaleString()}`}
-                      min={playerBasePrice}
-                      max={
-                        saleValidation.effectiveMax != null && saleValidation.effectiveMax > 0
-                          ? Math.max(playerBasePrice, saleValidation.effectiveMax)
+                  {saleValidation.error && (
+                    <div className="auction-validation-msg" role="alert">
+                      <span className="auction-validation-icon" aria-hidden>
+                        {'⚠️'}
+                      </span>
+                      {saleValidation.error}
+                    </div>
+                  )}
+                  <div className="auction-action-buttons">
+                    <button
+                      className="auction-sold-btn"
+                      onClick={handleMarkSold}
+                      disabled={statusUpdating || !saleValidation.canMarkSold}
+                      title={
+                        !saleValidation.canMarkSold
+                          ? 'Select a team and enter a price within that team’s max bid'
                           : undefined
                       }
-                      className={saleValidation.priceInputInvalid ? 'auction-input-invalid' : undefined}
-                      aria-invalid={saleValidation.priceInputInvalid}
-                    />
+                    >
+                      {statusUpdating ? '⏳' : '✅'} MARK AS SOLD
+                    </button>
+                    <button
+                      className="auction-unsold-btn"
+                      onClick={handleMarkUnsold}
+                      disabled={statusUpdating}
+                    >
+                      {statusUpdating ? '⏳' : '❌'} MARK AS UNSOLD
+                    </button>
                   </div>
-                </div>
-                {saleValidation.error && (
-                  <div className="auction-validation-msg" role="alert">
-                    <span className="auction-validation-icon" aria-hidden>
-                      {'⚠️'}
-                    </span>
-                    {saleValidation.error}
-                  </div>
-                )}
-                <div className="auction-action-buttons">
-                  <button
-                    className="auction-sold-btn"
-                    onClick={handleMarkSold}
-                    disabled={statusUpdating || !saleValidation.canMarkSold}
-                    title={
-                      !saleValidation.canMarkSold
-                        ? 'Select a team and enter a price within that team’s max bid'
-                        : undefined
-                    }
-                  >
-                    {statusUpdating ? '⏳' : '✅'} MARK AS SOLD
-                  </button>
-                  <button
-                    className="auction-unsold-btn"
-                    onClick={handleMarkUnsold}
-                    disabled={statusUpdating}
-                  >
-                    {statusUpdating ? '⏳' : '❌'} MARK AS UNSOLD
+                  <button className="auction-back-to-wheel-btn" onClick={handleBackToWheel}>
+                    ← Back to Wheel
                   </button>
                 </div>
+              ) : (
                 <button className="auction-back-to-wheel-btn" onClick={handleBackToWheel}>
                   ← Back to Wheel
                 </button>
-              </div>
+              )}
             </div>
           )}
         </div>
