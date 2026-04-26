@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SpinWheel from './SpinWheel';
+import TeamSquadPoster from './TeamSquadPoster';
 import PlayerCard from './PlayerCard';
 import { PlayerCardState } from '../types';
 import { getPlayerDisplayNumber } from '../lib/playerDisplayNumber';
@@ -82,6 +83,7 @@ export default function AuctionWheel({
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [roundCompleteMsg, setRoundCompleteMsg] = useState<string | null>(null);
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
+  const [squadPosterTeam, setSquadPosterTeam] = useState<TeamFromAPI | null>(null);
   const [editingAcquiredPrice, setEditingAcquiredPrice] = useState<{
     playerId: number;
     draft: string;
@@ -445,6 +447,135 @@ export default function AuctionWheel({
         )}
       </div>
 
+      {/* ── Top 3 Auction Picks ── */}
+      {soldPlayers.length >= 3 && (() => {
+        const top3 = [...soldPlayers]
+          .sort((a, b) => (Number(b.sold_price) || 0) - (Number(a.sold_price) || 0))
+          .slice(0, 3);
+
+        // Reorder for podium: [2nd, 1st, 3rd]
+        const podiumOrder = [top3[1], top3[0], top3[2]];
+        const medals = ['🥈', '🥇', '🥉'];
+        const rankLabels = ['2ND', '1ST', '3RD'];
+        const podiumHeights = ['120px', '150px', '100px'];
+        const rankColors = ['#c0c0c0', '#ffd700', '#cd7f32'];
+
+        return (
+          <div className="top3-section">
+            <div className="top3-header">
+              <h3 className="top3-title">🏆 TOP 3 AUCTION PICKS</h3>
+              <button
+                className="top3-download-btn"
+                onClick={async () => {
+                  const el = document.getElementById('top3-poster');
+                  if (!el) return;
+                  try {
+                    const html2canvas = (await import('html2canvas')).default;
+
+                    // Wait for all images inside the poster to load
+                    const imgs = el.querySelectorAll('img');
+                    await Promise.all(
+                      Array.from(imgs).map(
+                        (img) =>
+                          new Promise<void>((resolve) => {
+                            if (img.complete && img.naturalHeight > 0) resolve();
+                            else {
+                              img.onload = () => resolve();
+                              img.onerror = () => resolve();
+                            }
+                          })
+                      )
+                    );
+
+                    // Let layout settle
+                    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+                    const canvas = await html2canvas(el, {
+                      backgroundColor: '#060d1a',
+                      scale: 2,
+                      useCORS: true,
+                      allowTaint: true,
+                      logging: false,
+                      onclone: (clonedDoc: Document) => {
+                        clonedDoc.querySelectorAll('img').forEach((img) => {
+                          if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+                            img.style.visibility = 'hidden';
+                          }
+                        });
+                      },
+                    });
+                    const link = document.createElement('a');
+                    link.download = `top3_auction_picks.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                  } catch (err) {
+                    console.error('Top3 download error:', err);
+                    alert('Failed to download. Please try again.');
+                  }
+                }}
+              >
+                📥 Download
+              </button>
+            </div>
+            <div className="top3-podium" id="top3-poster">
+              <div className="top3-podium-bg" />
+
+              {/* Tournament branding at top */}
+              <div className="top3-tournament-header">
+                {clubLogoSrc && (
+                  <img src={clubLogoSrc} alt="Club" className="top3-club-logo" crossOrigin="anonymous" />
+                )}
+                <div className="top3-tournament-info">
+                  <div className="top3-tournament-name">{tournamentName}</div>
+                  <div className="top3-tournament-year">{tournamentYear} · TOP 3 MOST VALUABLE PICKS</div>
+                </div>
+              </div>
+
+              {/* Players row — horizontal, aligned to bottom like a podium */}
+              <div className="top3-podium-row">
+                {podiumOrder.map((p, i) => {
+                  const team = teams.find(t => t.name === p.sold_to);
+                  return (
+                    <div key={p.id} className={`top3-player top3-rank-${i === 1 ? 1 : i === 0 ? 2 : 3}`}>
+                      <div className="top3-medal" style={{ color: rankColors[i] }}>{medals[i]}</div>
+                      <div className="top3-photo-wrap" style={{ borderColor: rankColors[i] }}>
+                        {p.photo_url ? (
+                          <img src={p.photo_url} alt={p.name} className="top3-photo" crossOrigin="anonymous" />
+                        ) : (
+                          <div className="top3-photo-fallback">{p.name.charAt(0)}</div>
+                        )}
+                      </div>
+                      <div className="top3-name">{p.name}</div>
+                      {p.role && <div className="top3-role">{p.role}</div>}
+                      <div className="top3-team-badge" style={{ borderColor: `${rankColors[i]}66` }}>
+                        {team?.logo_url ? (
+                          <img src={team.logo_url} alt="" className="top3-team-logo" crossOrigin="anonymous" />
+                        ) : (
+                          <span className="top3-team-logo-fallback">{(p.sold_to || '?').charAt(0)}</span>
+                        )}
+                        <span className="top3-team-name">{p.sold_to}</span>
+                      </div>
+                      <div className="top3-price" style={{ color: rankColors[i] }}>
+                        ₹{Number(p.sold_price).toLocaleString()}
+                      </div>
+                      <div className="top3-pedestal" style={{ height: podiumHeights[i], background: `linear-gradient(180deg, ${rankColors[i]}22, ${rankColors[i]}08)`, borderTop: `2px solid ${rankColors[i]}44` }}>
+                        <span className="top3-rank-label" style={{ color: rankColors[i] }}>{rankLabels[i]}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div className="top3-footer">
+                <span className="top3-footer-brand">CRICNOVA</span>
+                <span className="top3-footer-sep">·</span>
+                <span>{tournamentName} {tournamentYear}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       <div className="auction-team-stats">
         <h3 className="auction-team-stats-title">
           Team Standings (Base: ₹{playerBasePrice.toLocaleString()} · Budget: ₹{teamTotalBudget.toLocaleString()} · Max Slots: {maxPlayersPerTeam})
@@ -595,6 +726,16 @@ export default function AuctionWheel({
                     </div>
                   ) : (
                     <div className="acquired-empty">No players acquired yet</div>
+                  )}
+                  {/* Download Squad Poster button */}
+                  {ts.acquiredPlayers.length > 0 && (
+                    <button
+                      className="team-download-squad-btn"
+                      onClick={() => setSquadPosterTeam(ts)}
+                      style={{ width: '100%', justifyContent: 'center', marginTop: '12px' }}
+                    >
+                      📥 {ts.remainingPlayersNeeded <= 0 ? 'DOWNLOAD SQUAD' : 'DOWNLOAD SQUAD POSTER'}
+                    </button>
                   )}
                 </div>
               )}
@@ -836,6 +977,19 @@ export default function AuctionWheel({
           </div>
         )}
       </div>
+      {/* ── Team Squad Poster Modal ── */}
+      {squadPosterTeam && (
+        <TeamSquadPoster
+          team={squadPosterTeam}
+          players={players.filter(
+            (p) => p.auction_status === 'sold' && p.sold_to === squadPosterTeam.name
+          )}
+          tournamentName={tournamentName}
+          tournamentYear={tournamentYear}
+          clubLogoSrc={clubLogoSrc}
+          onClose={() => setSquadPosterTeam(null)}
+        />
+      )}
     </div>
   );
 }

@@ -3455,3 +3455,746 @@ input[type="file"] { display: none; }
   .auction-wheel-center { transform: scale(0.7); }
   .acquired-list-summary { grid-template-columns: 1fr; }
 }
+/* ═══════════════════════════════════════════
+   ██  TOP 3 AUCTION PICKS  ██
+   ═══════════════════════════════════════════ */
+
+.top3-section {
+  margin: 20px 0 10px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.top3-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 0;
+}
+.top3-title {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #ffd700;
+  text-transform: uppercase;
+  margin: 0;
+}
+.top3-download-btn {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 6px 16px;
+  color: #ffd700;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+}
+.top3-download-btn:hover {
+  background: rgba(255, 215, 0, 0.18);
+  border-color: #ffd700;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Podium container — flex column: header → players → footer */
+.top3-podium {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: linear-gradient(180deg, rgba(5,10,20,0.95) 0%, rgba(8,16,30,1) 100%);
+  border-radius: 12px;
+  margin: 12px 0 0;
+  overflow: hidden;
+  min-height: min-content;
+}
+.top3-podium-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255,215,0,0.06) 0%, transparent 60%),
+    radial-gradient(circle at 20% 80%, rgba(192,192,192,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(205,127,50,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Tournament header inside poster */
+.top3-tournament-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px 10px;
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid rgba(255,215,0,0.08);
+}
+.top3-club-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255,215,0,0.25);
+  flex-shrink: 0;
+}
+.top3-tournament-info {
+  flex: 1;
+  min-width: 0;
+}
+.top3-tournament-name {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.85);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top3-tournament-year {
+  font-size: 0.55rem;
+  letter-spacing: 1.5px;
+  color: rgba(255,215,0,0.5);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Players row — the classic horizontal podium */
+.top3-podium-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  padding: 20px 16px 0;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+/* Individual player column */
+.top3-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 180px;
+  position: relative;
+  z-index: 1;
+}
+
+.top3-medal {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  animation: top3MedalFloat 3s ease-in-out infinite;
+}
+.top3-rank-1 .top3-medal { animation-delay: 0s; }
+.top3-rank-2 .top3-medal { animation-delay: 0.5s; }
+.top3-rank-3 .top3-medal { animation-delay: 1s; }
+@keyframes top3MedalFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Photo */
+.top3-photo-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #ffd700;
+  background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+  transition: transform 0.3s;
+}
+.top3-rank-1 .top3-photo-wrap {
+  width: 96px;
+  height: 96px;
+  box-shadow: 0 0 30px rgba(255,215,0,0.2), 0 6px 24px rgba(0,0,0,0.5);
+}
+.top3-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.top3-photo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,100,180,0.04));
+}
+
+/* Name */
+.top3-name {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 1px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.top3-rank-1 .top3-name {
+  font-size: 1rem;
+}
+
+/* Role */
+.top3-role {
+  font-size: 0.52rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* Team badge */
+.top3-team-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 4px;
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  margin-bottom: 6px;
+}
+.top3-team-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.top3-team-logo-fallback {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+}
+.top3-team-name {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Price */
+.top3-price {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.top3-rank-1 .top3-price {
+  font-size: 1.3rem;
+}
+
+/* Pedestal */
+.top3-pedestal {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14px;
+  border-radius: 6px 6px 0 0;
+}
+.top3-rank-label {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  opacity: 0.6;
+}
+
+/* Footer */
+.top3-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 0.6rem;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.top3-footer-brand {
+  font-weight: 700;
+  color: rgba(255,215,0,0.4);
+  letter-spacing: 2px;
+}
+.top3-footer-sep {
+  opacity: 0.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .top3-player { width: 130px; }
+  .top3-photo-wrap { width: 64px; height: 64px; }
+  .top3-rank-1 .top3-photo-wrap { width: 76px; height: 76px; }
+  .top3-name { font-size: 0.72rem; }
+  .top3-price { font-size: 0.9rem; }
+  .top3-rank-label { font-size: 1.1rem; }
+}
+
+@media (max-width: 480px) {
+  .top3-player { width: 105px; }
+  .top3-photo-wrap { width: 52px; height: 52px; }
+  .top3-rank-1 .top3-photo-wrap { width: 64px; height: 64px; }
+}
+
+/* ═══════════════════════════════════════════
+   ██  TEAM SQUAD POSTER  ██
+   ═══════════════════════════════════════════ */
+
+/* Full-squad download button on team cards */
+.team-download-squad-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(46, 204, 113, 0.06));
+  border: 1px solid rgba(46, 204, 113, 0.35);
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: #2ecc71;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.team-download-squad-btn:hover {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.25), rgba(46, 204, 113, 0.12));
+  border-color: #2ecc71;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.2);
+}
+
+/* Team card full-squad badge */
+.team-full-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  animation: squadBadgePulse 2s ease-in-out infinite;
+}
+@keyframes squadBadgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.15); }
+  50% { box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }
+}
+
+/* ── Poster Overlay ── */
+.squad-poster-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: squadOverlayIn 0.3s ease;
+}
+@keyframes squadOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.squad-poster-dialog {
+  background: linear-gradient(160deg, #0c1a2e 0%, #0a1222 100%);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: 16px;
+  max-width: 95vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 212, 255, 0.06);
+  animation: squadDialogIn 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  overflow: hidden;
+}
+@keyframes squadDialogIn {
+  from { opacity: 0; transform: scale(0.95) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.squad-poster-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  flex-shrink: 0;
+}
+.squad-poster-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.squad-poster-close:hover {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.4);
+  color: #ff6b6b;
+}
+.squad-poster-dialog-title {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  flex: 1;
+}
+.squad-poster-download-btn {
+  background: linear-gradient(135deg, var(--cyan), #0088cc);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
+  white-space: nowrap;
+}
+.squad-poster-download-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(0, 212, 255, 0.35);
+}
+.squad-poster-download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.squad-poster-scroll {
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ═══ THE POSTER ITSELF ═══ */
+.squad-poster {
+  --squad-grad-1: #ff6b35;
+  --squad-grad-2: #f72585;
+  position: relative;
+  background: linear-gradient(180deg, #050a14 0%, #0a1628 35%, #060d1a 100%);
+  border-radius: 18px;
+  overflow: hidden;
+  padding: 0 0 24px 0;
+  /* Ensure poster sizes to full content */
+  min-height: min-content;
+}
+
+/* Decorative background pattern */
+.squad-poster-bg-pattern {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 20%, var(--squad-grad-1) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, var(--squad-grad-2) 0%, transparent 50%);
+  opacity: 0.06;
+  pointer-events: none;
+}
+.squad-poster-bg-glow {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--squad-grad-1), transparent 70%);
+  opacity: 0.08;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+/* ── Header ── */
+.squad-poster-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 28px 14px;
+}
+.squad-poster-header-line {
+  position: absolute;
+  bottom: 0;
+  left: 28px;
+  right: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+}
+.squad-poster-club-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+.squad-poster-header-text {
+  flex: 1;
+}
+.squad-poster-event-name {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+}
+.squad-poster-event-year {
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+}
+
+/* ── Team Identity ── */
+.squad-poster-team-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 28px 14px;
+  position: relative;
+}
+.squad-poster-team-logo-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow:
+    0 0 40px rgba(0, 0, 0, 0.4),
+    0 0 0 6px rgba(255, 255, 255, 0.03);
+}
+.squad-poster-team-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.squad-poster-team-logo-fallback {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 2px;
+}
+.squad-poster-team-name {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 255, 255, 0.1);
+  line-height: 1.15;
+}
+.squad-poster-squad-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--squad-grad-1);
+  margin-top: 4px;
+}
+.squad-poster-team-divider {
+  width: 60px;
+  height: 2px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, transparent, var(--squad-grad-1), var(--squad-grad-2), transparent);
+  border-radius: 2px;
+}
+
+/* ── Player Grid ── */
+.squad-poster-grid {
+  padding: 12px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+.squad-poster-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.squad-poster-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 110px;
+  flex-shrink: 0;
+}
+.squad-poster-player-photo-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  margin-bottom: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s;
+}
+.squad-poster-player-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.squad-poster-player-photo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,100,180,0.04));
+}
+.squad-poster-player-jersey {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: linear-gradient(135deg, var(--squad-grad-1), var(--squad-grad-2));
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1.3;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.squad-poster-player-name {
+  font-family: var(--font-oswald), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1.25;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.squad-poster-player-role {
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  color: var(--squad-grad-1);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* ── Footer ── */
+.squad-poster-footer {
+  padding: 16px 28px 0;
+  position: relative;
+}
+.squad-poster-footer-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  margin-bottom: 12px;
+}
+.squad-poster-footer-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+}
+.squad-poster-footer-brand {
+  font-weight: 700;
+  color: rgba(0, 212, 255, 0.5);
+  letter-spacing: 2px;
+}
+.squad-poster-footer-sep {
+  opacity: 0.4;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .squad-poster-dialog {
+    max-width: 98vw;
+    max-height: 95vh;
+  }
+  .squad-poster-controls {
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .squad-poster-scroll {
+    padding: 12px;
+  }
+  .squad-poster {
+    transform: scale(0.8);
+    transform-origin: top center;
+  }
+}

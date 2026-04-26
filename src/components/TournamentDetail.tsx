@@ -1324,9 +1324,11 @@ export default function TournamentDetail({
             <div className="teams-grid">
               {teams.map((team) => {
                 // Count players sold to this team
-                const teamPlayerCount = players.filter(
+                const teamPlayers = players.filter(
                   (p) => p.auction_status === 'sold' && p.sold_to === team.name
-                ).length;
+                );
+                const teamPlayerCount = teamPlayers.length;
+                const isSquadFull = teamPlayerCount >= maxPlayersPerTeam && maxPlayersPerTeam > 0;
 
                 return (
                   <div key={team.id} className="team-card">
@@ -1340,10 +1342,15 @@ export default function TournamentDetail({
                       )}
                     </div>
                     <div className="team-card-info">
-                      <div className="team-card-name">{team.name}</div>
+                      <div className="team-card-name">
+                        {team.name}
+                        {isSquadFull && (
+                          <span className="team-full-badge" style={{ marginLeft: '8px' }}>✅ FULL</span>
+                        )}
+                      </div>
                       <div className="team-card-meta">
                         {teamPlayerCount > 0
-                          ? `${teamPlayerCount} player${teamPlayerCount !== 1 ? 's' : ''} acquired`
+                          ? `${teamPlayerCount}/${maxPlayersPerTeam} player${teamPlayerCount !== 1 ? 's' : ''} acquired`
                           : 'No players yet'}
                       </div>
                     </div>
